@@ -1,9 +1,9 @@
-import { useState } from 'react'
-import './App.css'
-import { Button } from 'antd'
+import { Button } from 'antd';
+import { useState } from 'react';
+import './App.css';
 
-function App() {
-  const [count, setCount] = useState(0)
+const App = () => {
+  const [count, setCount] = useState(0);
 
   return (
     <>
@@ -19,7 +19,7 @@ function App() {
         </div>
       </div>
     </>
-  )
-}
+  );
+};
 
-export default App
+export default App;

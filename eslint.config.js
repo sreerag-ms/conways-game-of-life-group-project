@@ -1,7 +1,7 @@
-import js from '@eslint/js'
-import globals from 'globals'
-import reactHooks from 'eslint-plugin-react-hooks'
-import reactRefresh from 'eslint-plugin-react-refresh'
+import js from '@eslint/js';
+import reactHooks from 'eslint-plugin-react-hooks';
+import reactRefresh from 'eslint-plugin-react-refresh';
+import globals from 'globals';
 
 export default [
   { ignores: ['dist'] },
@@ -28,6 +28,36 @@ export default [
         'warn',
         { allowConstantExport: true },
       ],
+
+      'func-style': ['error', 'expression'],
+      'arrow-body-style': ['error', 'as-needed'],
+
+      'indent': ['error', 2, { 'SwitchCase': 1 }],
+
+      'padding-line-between-statements': [
+        'error',
+        { blankLine: 'always', prev: '*', next: 'return' },
+      ],
+      'no-multiple-empty-lines': ['error', { 'max': 1, 'maxEOF': 0, 'maxBOF': 0 }],
+
+      'semi': ['error', 'always'],
+      'quotes': ['error', 'single'],
+      'object-curly-spacing': ['error', 'always'],
+      'array-bracket-spacing': ['error', 'never'],
+      'comma-dangle': ['error', 'always-multiline'],
+      'eol-last': ['error', 'always'],
+      'no-trailing-spaces': 'error',
+      'no-console': 'warn',
+
+      // Add spacing rules
+      'arrow-spacing': ['error', { 'before': true, 'after': true }],
+      'space-infix-ops': 'error',
+      'space-before-function-paren': ['error', {
+        'anonymous': 'always',
+        'named': 'never',
+        'asyncArrow': 'always',
+      }],
+      'key-spacing': ['error', { 'beforeColon': false, 'afterColon': true }],
     },
   },
-]
+];
