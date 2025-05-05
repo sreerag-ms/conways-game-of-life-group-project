@@ -397,6 +397,8 @@ export const useGameStore = create((set, get) => ({
     return { success: true };
   },
 
+  getMetrics: () => get().metrics,
+
   exportData: () => {
     const { metrics } = get();
 

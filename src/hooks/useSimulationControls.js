@@ -16,6 +16,7 @@ export const useSimulationControls = ({ onStabilize } = {}) => {
     simulationSpeed,
     updateInterval,
     showChanges,
+    getMetrics,
   ] = useGameStore(
     state => [
       state.isRunning,
@@ -28,6 +29,7 @@ export const useSimulationControls = ({ onStabilize } = {}) => {
       state.simulationSpeed,
       state.updateInterval,
       state.showChanges,
+      state.getMetrics,
     ],
     shallow,
   );
@@ -43,5 +45,6 @@ export const useSimulationControls = ({ onStabilize } = {}) => {
     interval: simulationSpeed,
     updateInterval,
     showChanges,
+    getMetrics,
   };
 };

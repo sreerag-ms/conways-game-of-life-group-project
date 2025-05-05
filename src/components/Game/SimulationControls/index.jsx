@@ -13,6 +13,7 @@ import PropTypes from 'prop-types';
 import React, { useState } from 'react';
 import { useGameOfLifeTheme } from '../../../hooks/useGameOfLifeTheme';
 import { useSimulationControls } from '../../../hooks/useSimulationControls';
+import ChartModal from '../../modals/ChartModal';
 import SettingsModal from '../../modals/SettingsModal';
 
 const SimulationControls = () => {
@@ -26,6 +27,7 @@ const SimulationControls = () => {
     setShowGridChanges,
     interval,
     updateInterval,
+    getMetrics,
     // generation,
     // metrics,
     showChanges,
@@ -234,11 +236,11 @@ const SimulationControls = () => {
         isVisible={configDrawerOpen}
         onClose={() => setConfigDrawerOpen(false)}
       />
-      {/* <ChartModal
+      <ChartModal
         isVisible={chartModalOpen}
         onClose={() => setChartModalOpen(false)}
-        metrics={metrics}
-      /> */}
+        getMetrics={getMetrics}
+      />
     </div>
   );
 };

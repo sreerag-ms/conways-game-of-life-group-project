@@ -1,17 +1,17 @@
 import { Modal } from 'antd';
-import PropTypes from 'prop-types';
-import React, { useEffect, useState } from 'react';
 import {
-  Chart as ChartJS,
   CategoryScale,
+  Chart as ChartJS,
+  Filler,
+  Legend,
   LinearScale,
-  PointElement,
   LineElement,
+  PointElement,
   Title,
   Tooltip,
-  Legend,
-  Filler,
 } from 'chart.js';
+import PropTypes from 'prop-types';
+import React, { useEffect, useState } from 'react';
 import { Line } from 'react-chartjs-2';
 
 // Register ChartJS components
@@ -26,11 +26,18 @@ ChartJS.register(
   Filler,
 );
 
-const ChartModal = ({ isVisible, onClose, metrics }) => {
+const ChartModal = ({ isVisible, onClose, getMetrics }) => {
+  const [metrics, setMetrics] = useState([]);
   const [chartData, setChartData] = useState({
     labels: [],
     datasets: [],
   });
+
+  useEffect(() => {
+    if (getMetrics && isVisible){
+      setMetrics(getMetrics());
+    }
+  }, [isVisible, getMetrics]);
 
   useEffect(() => {
     if (metrics && metrics.length > 0) {
@@ -146,7 +153,7 @@ const ChartModal = ({ isVisible, onClose, metrics }) => {
       onCancel={onClose}
       width={800}
       footer={null}
-      bodyStyle={{ 
+      bodyStyle={{
         padding: '20px',
         backgroundColor: '#fff',
       }}
@@ -167,12 +174,7 @@ const ChartModal = ({ isVisible, onClose, metrics }) => {
 ChartModal.propTypes = {
   isVisible: PropTypes.bool.isRequired,
   onClose: PropTypes.func.isRequired,
-  metrics: PropTypes.arrayOf(PropTypes.shape({
-    generation: PropTypes.number.isRequired,
-    populationSize: PropTypes.number.isRequired,
-    births: PropTypes.number.isRequired,
-    deaths: PropTypes.number.isRequired,
-  })).isRequired,
+  getMetrics: PropTypes.func.isRequired,
 };
 
 export default ChartModal;
