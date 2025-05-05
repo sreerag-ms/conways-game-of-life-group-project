@@ -1,51 +1,10 @@
-import { InboxOutlined } from '@ant-design/icons';
-import { Button, Form, InputNumber, message, Modal, Select, Switch, Upload } from 'antd';
+import { Button, Form, InputNumber, message, Modal, Select, Switch } from 'antd';
 import { Formik } from 'formik';
 import PropTypes from 'prop-types';
 import React from 'react';
-import * as Yup from 'yup';
 import { RULES } from '../../hooks/constants';
-import { useGameOfLife } from '../../hooks/useGameOfLife';
-import { imageToPattern } from '../../utils/patterns';
-
-// Convert pattern cells to config format
-const createConfigFromPattern = (pattern, rows, cols, rules) => ({
-  cells: pattern.cells.flatMap((row, i) => 
-    row.map((cell, j) => cell === 1 ? `${i},${j}` : null)
-  ).filter(Boolean),
-  rows,
-  cols,
-  rules,
-});
-
-// Process uploaded image
-const processUploadedFile = (file, cols, rows, rules, onComplete) => {
-  const reader = new FileReader();
-  reader.onload = (e) => {
-    const img = new Image();
-    img.onload = () => {
-      const pattern = imageToPattern(img, cols, rows);
-      const configData = createConfigFromPattern(pattern, rows, cols, rules);
-      onComplete(configData);
-    };
-    img.src = e.target.result;
-  };
-  reader.readAsDataURL(file);
-};
-
-// Validation schema for grid settings
-const gameSettingsValidationSchema = Yup.object().shape({
-  rows: Yup.number()
-    .required('Rows are required')
-    .min(5, 'Minimum 5 rows')
-    .max(1000, 'Maximum 1000 rows'),
-  cols: Yup.number()
-    .required('Columns are required')
-    .min(5, 'Minimum 5 columns')
-    .max(1000, 'Maximum 1000 columns'),
-  isContinuous: Yup.boolean(),
-  currentRules: Yup.string().required('Rule set is required'),
-});
+import { useSimulationControls } from '../../hooks/useSimulationControls';
+import { gameSettingsValidationSchema } from './constants';
 
 const FormItemWithError = ({ label, name, touched, errors, children }) => (
   <Form.Item
@@ -70,18 +29,23 @@ const SettingsModal = ({
   onClose,
 }) => {
   const {
-    rows,
-    cols,
-    isContinuous,
-    currentRules,
+    getGridDimensions,
     createGrid,
     setContinuousGrid,
     clearGrid,
     loadConfig,
     changeRules,
-  } = useGameOfLife();
+  } = useSimulationControls();
+
+  const { rows, cols } = getGridDimensions();
 
   // Form initialization
+  const [isContinuous, currentRules] = [
+    // These are not in getGridDimensions, so fetch from store directly
+    useSimulationControls().isContinuous,
+    useSimulationControls().currentRules,
+  ];
+
   const initialValues = {
     rows,
     cols,
@@ -91,12 +55,9 @@ const SettingsModal = ({
 
   // Form submission handler
   const handleSubmit = (values) => {
-    // Update settings
     createGrid(values.rows, values.cols);
     setContinuousGrid(values.isContinuous);
     changeRules(values.currentRules);
-
-    // Close the modal
     onClose();
   };
 
@@ -201,30 +162,6 @@ const SettingsModal = ({
             </Form>
           )}
         </Formik>
-
-        <div className="pt-6 border-t">
-          <h3 className="mb-3 text-base font-medium">Image Pattern Editor</h3>
-          <p className="mb-3 text-sm text-gray-600">
-            Upload an image to convert it into a game pattern. Dark pixels will become live cells.
-          </p>
-          <div className="flex flex-col gap-4">
-            <Upload.Dragger
-              accept="image/*"
-              showUploadList={false}
-              customRequest={({ file }) => {
-                processUploadedFile(file, cols, rows, currentRules, handleLoadConfig);
-              }}
-            >
-              <p className="ant-upload-drag-icon">
-                <InboxOutlined />
-              </p>
-              <p className="ant-upload-text">Click or drag an image file to this area</p>
-              <p className="ant-upload-hint">
-                The image will be scaled to fit the current grid size ({cols}x{rows})
-              </p>
-            </Upload.Dragger>
-          </div>
-        </div>
       </div>
     </Modal>
   );

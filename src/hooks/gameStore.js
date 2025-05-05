@@ -397,6 +397,8 @@ export const useGameStore = create((set, get) => ({
     return { success: true };
   },
 
+  getMetrics: () => get().metrics,
+
   exportData: () => {
     const { metrics } = get();
 
@@ -422,5 +424,11 @@ export const useGameStore = create((set, get) => ({
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+  },
+
+  getGridDimensions: () => {
+    const { rows, cols } = get();
+
+    return { rows, cols };
   },
 }));
