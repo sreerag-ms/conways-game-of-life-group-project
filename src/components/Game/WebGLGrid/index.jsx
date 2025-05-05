@@ -6,7 +6,7 @@ import { FRAGMENT_SHADER_SOURCE, VERTEX_SHADER_SOURCE } from './constants';
 import { hexToRgb } from './utils';
 
 const WebGLGrid = ({ cellSize = 15 }) => {
-  // Get values from hooks instead of props
+
   const {
     activeCells,
     rows,
@@ -15,10 +15,12 @@ const WebGLGrid = ({ cellSize = 15 }) => {
     dyingCells,
     showChanges,
     toggleCell,
-    placePattern, // Add this from useGameOfLife
+    placePattern,
+    createGrid,
   } = useGameOfLife();
 
   const { theme } = useGameOfLifeTheme();
+
   const {
     zoom,
     panOffset,
@@ -28,7 +30,6 @@ const WebGLGrid = ({ cellSize = 15 }) => {
     dragStart,
     setDragStart,
     updatePanOffset,
-    setZoom,
   } = useCanvasStore();
 
   const canvasRef = useRef(null);
@@ -40,12 +41,12 @@ const WebGLGrid = ({ cellSize = 15 }) => {
   const canvasWidth = useRef(0);
   const canvasHeight = useRef(0);
 
-  // Set default grid visibility to true without UI control
-  const [showGrid, setShowGrid] = useState(true);
-  const [gridColor, setGridColor] = useState({ r: 0, g: 0, b: 0, a: 0.5 });
   const [hoveredCell, setHoveredCell] = useState({ row: -1, col: -1 });
 
-  // Calculate responsive cell size
+  useEffect(() => {
+    createGrid(100, 100);
+  }, [createGrid]);
+
   useEffect(() => {
     const calculateCellSize = () => {
       const containerWidth = window.innerWidth > 768
@@ -74,8 +75,6 @@ const WebGLGrid = ({ cellSize = 15 }) => {
 
     const gl = canvas.getContext('webgl', { antialias: false });
     if (!gl) {
-      console.error('WebGL not supported');
-
       return;
     }
 
@@ -117,9 +116,7 @@ const WebGLGrid = ({ cellSize = 15 }) => {
         cells: gl.getUniformLocation(program, 'u_cells'),
         aliveColor: gl.getUniformLocation(program, 'u_aliveColor'),
         deadColor: gl.getUniformLocation(program, 'u_deadColor'),
-        gridColor: gl.getUniformLocation(program, 'u_gridColor'),
         gridSize: gl.getUniformLocation(program, 'u_gridSize'),
-        showGrid: gl.getUniformLocation(program, 'u_showGrid'),
         hoveredCell: gl.getUniformLocation(program, 'u_hoveredCell'),
         showHoverEffect: gl.getUniformLocation(program, 'u_showHoverEffect'),
         showChanges: gl.getUniformLocation(program, 'u_showChanges'),
@@ -160,7 +157,7 @@ const WebGLGrid = ({ cellSize = 15 }) => {
     gl.viewport(0, 0, width, height);
 
     render();
-  }, [rows, cols, responsiveCellSize, activeCells, bornCells, dyingCells, showGrid, gridColor, hoveredCell, showChanges, theme]);
+  }, [rows, cols, responsiveCellSize, activeCells, bornCells, dyingCells, hoveredCell, showChanges, theme]);
 
   // Render cells
   const render = useCallback(() => {
@@ -249,7 +246,6 @@ const WebGLGrid = ({ cellSize = 15 }) => {
     gl.uniform2f(program.uniformLocations.resolution, canvasWidth.current, canvasHeight.current);
     gl.uniform1f(program.uniformLocations.cellSize, responsiveCellSize);
     gl.uniform2f(program.uniformLocations.gridSize, cols, rows);
-    gl.uniform1i(program.uniformLocations.showGrid, showGrid ? 1 : 0);
     gl.uniform2f(program.uniformLocations.hoveredCell, hoveredCell.col, hoveredCell.row);
     gl.uniform1i(program.uniformLocations.showHoverEffect, hoveredCell.row >= 0 && hoveredCell.col >= 0 ? 1 : 0);
     gl.uniform1i(program.uniformLocations.showChanges, showChanges ? 1 : 0);
@@ -264,7 +260,6 @@ const WebGLGrid = ({ cellSize = 15 }) => {
     gl.uniform4f(program.uniformLocations.deadColor, deadColor.r, deadColor.g, deadColor.b, 1.0);
     gl.uniform4f(program.uniformLocations.bornColor, bornColor.r, bornColor.g, bornColor.b, 1.0);
     gl.uniform4f(program.uniformLocations.dieColor, dieColor.r, dieColor.g, dieColor.b, 1.0);
-    gl.uniform4f(program.uniformLocations.gridColor, gridColor.r, gridColor.g, gridColor.b, gridColor.a);
     gl.uniform1i(program.uniformLocations.cells, 0);
 
     // Set attributes
@@ -280,7 +275,7 @@ const WebGLGrid = ({ cellSize = 15 }) => {
     gl.clearColor(0.9, 0.9, 0.9, 1.0);
     gl.clear(gl.COLOR_BUFFER_BIT);
     gl.drawArrays(gl.TRIANGLES, 0, 6);
-  }, [cols, rows, activeCells, bornCells, dyingCells, responsiveCellSize, showGrid, showChanges, gridColor, hoveredCell, theme]);
+  }, [cols, rows, activeCells, bornCells, dyingCells, responsiveCellSize, showChanges, hoveredCell, theme]);
 
   // Convert screen coordinates to cell coordinates, accounting for zoom and pan
   const screenToGridCoordinates = useCallback((screenX, screenY) => {

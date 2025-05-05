@@ -11,25 +11,28 @@ import {
 import { Button, Card, ColorPicker, Popover, Slider, Switch, Tooltip } from 'antd';
 import PropTypes from 'prop-types';
 import React, { useState } from 'react';
-import ChartModal from '../../modals/ChartModal';
+import { useGameOfLifeTheme } from '../../../hooks/useGameOfLifeTheme';
+import { useSimulationControls } from '../../../hooks/useSimulationControls';
 import SettingsModal from '../../modals/SettingsModal';
 
-const SimulationControls = ({
-  isRunning,
-  onStart,
-  onStop,
-  onStep,
-  onClear,
-  onExportData,
-  setShowGridChanges,
-  updateColor,
-  resetTheme,
-  theme,
-  interval,
-  onUpdateInterval,
-  generation,
-  metrics,
-}) => {
+const SimulationControls = () => {
+  const {
+    isRunning,
+    startSimulation,
+    stopSimulation,
+    nextGeneration,
+    clearGrid,
+    exportData,
+    setShowGridChanges,
+    interval,
+    updateInterval,
+    // generation,
+    // metrics,
+    showChanges,
+  } = useSimulationControls();
+
+  const { theme, updateColor, resetTheme } = useGameOfLifeTheme();
+
   const [configDrawerOpen, setConfigDrawerOpen] = useState(false);
   const [colorPopoverOpen, setColorPopoverOpen] = useState(false);
   const [chartModalOpen, setChartModalOpen] = useState(false);
@@ -45,7 +48,7 @@ const SimulationControls = ({
 
   const handleIntervalChange = (value) => {
     setIntervalInput(value);
-    onUpdateInterval(value);
+    updateInterval(value);
   };
 
   // Color picker popover content
@@ -87,7 +90,7 @@ const SimulationControls = ({
               <Button
                 type="primary"
                 icon={<PlayCircleOutlined />}
-                onClick={onStart}
+                onClick={startSimulation}
                 disabled={isRunning}
                 size="large"
                 shape="circle"
@@ -100,7 +103,7 @@ const SimulationControls = ({
               <Button
                 danger
                 icon={<PauseCircleOutlined />}
-                onClick={onStop}
+                onClick={stopSimulation}
                 disabled={!isRunning}
                 size="large"
                 shape="circle"
@@ -112,7 +115,7 @@ const SimulationControls = ({
             <Tooltip title="Next Generation">
               <Button
                 icon={<StepForwardOutlined />}
-                onClick={onStep}
+                onClick={nextGeneration}
                 disabled={isRunning}
                 size="large"
                 shape="circle"
@@ -124,7 +127,7 @@ const SimulationControls = ({
             <Tooltip title="Clear Grid">
               <Button
                 icon={<ClearOutlined />}
-                onClick={onClear}
+                onClick={clearGrid}
                 size="large"
                 shape="circle"
                 className="flex items-center justify-center"
@@ -154,7 +157,7 @@ const SimulationControls = ({
             <Tooltip title="Export Data">
               <Button
                 icon={<DownloadOutlined />}
-                onClick={onExportData}
+                onClick={exportData}
                 size="large"
                 shape="circle"
                 className="flex items-center justify-center"
@@ -213,15 +216,16 @@ const SimulationControls = ({
                 <span className="text-sm text-gray-700">Show next generation preview:</span>
                 <Switch
                   size="small"
+                  checked={showChanges}
                   onChange={checked => setShowGridChanges(checked)}
                   title="Highlight cells that will be born or die in the next generation"
                 />
               </div>
 
-              <div className="flex items-center justify-between w-full">
+              {/* <div className="flex items-center justify-between w-full">
                 <span className="text-sm text-gray-700">Generation:</span>
                 <span className="text-sm font-semibold text-primary-500">{generation || 0}</span>
-              </div>
+              </div> */}
             </div>
           </div>
         </div>
@@ -230,23 +234,16 @@ const SimulationControls = ({
         isVisible={configDrawerOpen}
         onClose={() => setConfigDrawerOpen(false)}
       />
-      <ChartModal
+      {/* <ChartModal
         isVisible={chartModalOpen}
         onClose={() => setChartModalOpen(false)}
         metrics={metrics}
-      />
+      /> */}
     </div>
   );
 };
 
 SimulationControls.propTypes = {
-  isRunning: PropTypes.bool.isRequired,
-  onStart: PropTypes.func.isRequired,
-  onStop: PropTypes.func.isRequired,
-  onStep: PropTypes.func.isRequired,
-  onClear: PropTypes.func.isRequired,
-  onExportData: PropTypes.func.isRequired,
-  setShowGridChanges: PropTypes.func.isRequired,
   updateColor: PropTypes.func.isRequired,
   resetTheme: PropTypes.func.isRequired,
   theme: PropTypes.shape({
@@ -255,15 +252,6 @@ SimulationControls.propTypes = {
     born: PropTypes.string,
     die: PropTypes.string,
   }).isRequired,
-  interval: PropTypes.number.isRequired,
-  onUpdateInterval: PropTypes.func.isRequired,
-  generation: PropTypes.number.isRequired,
-  metrics: PropTypes.arrayOf(PropTypes.shape({
-    generation: PropTypes.number.isRequired,
-    populationSize: PropTypes.number.isRequired,
-    births: PropTypes.number.isRequired,
-    deaths: PropTypes.number.isRequired,
-  })).isRequired,
 };
 
 export default React.memo(SimulationControls);
