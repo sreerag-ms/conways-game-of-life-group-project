@@ -1,258 +1,364 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { DEFAULT_COLS, DEFAULT_ROWS, DEFAULT_SIMULATION_SPEED, DEFAULT_COLORS, createEmptyGrid } from './constants';
-import {
-  areGridsEqual,
-  calculateNextGenerationGrid,
-  calculateCellStates,
-  gridToConfigText,
-  parseConfigText,
-} from './utils';
+import { DEFAULT_COLS, DEFAULT_ROWS, DEFAULT_SIMULATION_SPEED, RULES } from './constants';
+
+// Helper to convert between representations
+const coordToString = (row, col) => `${row},${col}`;
+const stringToCoord = (str) => str.split(',').map(Number);
 
 export const useGameOfLife = ({ onStabilize } = {}) => {
   // State management
-  const [grid, setGrid] = useState([]);
+  const [activeCells, setActiveCells] = useState(new Set());
+  const [previousActiveCells, setPreviousActiveCells] = useState(new Set());
+  const [bornCells, setBornCells] = useState(new Set()); // Cells that will be born in the next generation
+  const [dyingCells, setDyingCells] = useState(new Set()); // Cells that will die in the next generation
   const [rows, setRows] = useState(DEFAULT_ROWS);
   const [cols, setCols] = useState(DEFAULT_COLS);
   const [isRunning, setIsRunning] = useState(false);
   const [simulationSpeed, setSimulationSpeed] = useState(DEFAULT_SIMULATION_SPEED);
-  const [visualizationState, setVisualizationState] = useState('current');
-  const [cellStates, setCellStates] = useState([]);
-  const [previewEnabled, setPreviewEnabled] = useState(true);
-  const [colors, setColors] = useState(DEFAULT_COLORS);
+  const [currentRules, setCurrentRules] = useState('GoL');
+  const [isContinuous, setIsContinuous] = useState(true); // Add continuous grid toggle
+  const [showChanges, setShowChanges] = useState(false); // Add state to control whether to show previous cells
 
   // Refs
-  const simulationTimeoutRef = useRef(null);
-  const animationTimeoutRef = useRef(null);
-  const currentGridRef = useRef(grid);
-  const isRunningRef = useRef(false);
+  const simulationIntervalRef = useRef(null);
 
-  // Update grid ref when grid changes
+  // Calculate next state set without updating state
+  const getNextStateSet = useCallback((currentActiveCells) => {
+    const nextActiveCells = new Set();
+    const cellsToCheck = new Set();
+    const rules = RULES[currentRules];
+
+    // Add all active cells to check
+    currentActiveCells.forEach(coordStr => {
+      cellsToCheck.add(coordStr);
+
+      // Add all neighbors to check
+      const [row, col] = stringToCoord(coordStr);
+      for (let i = -1; i <= 1; i++) {
+        for (let j = -1; j <= 1; j++) {
+          if (i === 0 && j === 0) continue;
+
+          // Handle continuous vs non-continuous grid
+          let newRow, newCol;
+          if (isContinuous) {
+            // Wrap around the edges (continuous)
+            newRow = (row + i + rows) % rows;
+            newCol = (col + j + cols) % cols;
+          } else {
+            // No wrapping (non-continuous)
+            newRow = row + i;
+            newCol = col + j;
+
+            // Skip if outside grid boundaries
+            if (newRow < 0 || newRow >= rows || newCol < 0 || newCol >= cols) {
+              continue;
+            }
+          }
+
+          cellsToCheck.add(coordToString(newRow, newCol));
+        }
+      }
+    });
+
+    // Check all cells that might change state
+    cellsToCheck.forEach(coordStr => {
+      const [row, col] = stringToCoord(coordStr);
+      const isAlive = currentActiveCells.has(coordStr);
+
+      // Count live neighbors
+      let liveNeighbors = 0;
+      for (let i = -1; i <= 1; i++) {
+        for (let j = -1; j <= 1; j++) {
+          if (i === 0 && j === 0) continue;
+
+          let neighborRow, neighborCol;
+          if (isContinuous) {
+            // Wrap around the edges (continuous)
+            neighborRow = (row + i + rows) % rows;
+            neighborCol = (col + j + cols) % cols;
+          } else {
+            // No wrapping (non-continuous)
+            neighborRow = row + i;
+            neighborCol = col + j;
+
+            // Skip if outside grid boundaries
+            if (neighborRow < 0 || neighborRow >= rows || neighborCol < 0 || neighborCol >= cols) {
+              continue;
+            }
+          }
+
+          const neighborCoord = coordToString(neighborRow, neighborCol);
+
+          if (currentActiveCells.has(neighborCoord)) {
+            liveNeighbors++;
+          }
+        }
+      }
+
+      // Apply rules
+      if (isAlive && rules.S.includes(liveNeighbors)) {
+        // Cell survives
+        nextActiveCells.add(coordStr);
+      } else if (!isAlive && rules.B.includes(liveNeighbors)) {
+        // Cell is born
+        nextActiveCells.add(coordStr);
+      }
+    });
+
+    return nextActiveCells;
+  }, [rows, cols, currentRules, isContinuous]);
+
+  // Update cell change tracking whenever activeCells changes
   useEffect(() => {
-    currentGridRef.current = grid;
-  }, [grid]);
+    setPreviousActiveCells(new Set(activeCells));
 
-  const stopSimulation = useCallback(() => {
-    isRunningRef.current = false;
-    if (simulationTimeoutRef.current) {
-      clearTimeout(simulationTimeoutRef.current);
-      simulationTimeoutRef.current = null;
+    // If showChanges is enabled, calculate born and dying cells
+    if (showChanges) {
+      const nextGeneration = getNextStateSet(activeCells);
+
+      // Find cells that will be born (in next gen but not in current)
+      const newBornCells = new Set();
+      nextGeneration.forEach(cell => {
+        if (!activeCells.has(cell)) {
+          newBornCells.add(cell);
+        }
+      });
+
+      // Find cells that will die (in current but not in next gen)
+      const newDyingCells = new Set();
+      activeCells.forEach(cell => {
+        if (!nextGeneration.has(cell)) {
+          newDyingCells.add(cell);
+        }
+      });
+
+      setBornCells(newBornCells);
+      setDyingCells(newDyingCells);
     }
-    if (animationTimeoutRef.current) {
-      clearTimeout(animationTimeoutRef.current);
-      animationTimeoutRef.current = null;
+  }, [activeCells, showChanges, getNextStateSet]);
+
+  // Stop simulation
+  const stopSimulation = useCallback(() => {
+    if (simulationIntervalRef.current) {
+      clearInterval(simulationIntervalRef.current);
+      simulationIntervalRef.current = null;
     }
     setIsRunning(false);
-    setVisualizationState('current');
   }, []);
 
-  const advance = useCallback(() => {
-    if (!isRunningRef.current) return;
+  // Calculate next generation using sparse representation
+  const calculateNextGeneration = useCallback(() => {
+    setActiveCells(currentActiveCells => {
+      // Store the current state before changing
+      setPreviousActiveCells(new Set(currentActiveCells));
 
-    const currentGrid = currentGridRef.current;
-    const nextGrid = calculateNextGenerationGrid(currentGrid, rows, cols);
+      // Get the next state set
+      const nextActiveCells = getNextStateSet(currentActiveCells);
 
-    // Check if the grid has stabilized
-    const hasStabilized = areGridsEqual(currentGrid, nextGrid);
-    if (hasStabilized) {
-      console.log('Grid has stabilized');
-      stopSimulation();
-      if (onStabilize) onStabilize();
-      return;
-    }
+      // Check if the grid has stabilized
+      const hasStabilized = areGridsEqual(currentActiveCells, nextActiveCells);
+      if (hasStabilized) {
+        console.log('Grid has stabilized');
+        setTimeout(() => {
+          stopSimulation();
+          if (onStabilize) onStabilize();
+        }, 0);
 
-    if (previewEnabled) {
-      // Show preview
-      const states = calculateCellStates(currentGrid, rows, cols);
-      setCellStates(states);
-      setVisualizationState('preview');
-
-      // Schedule the update to next generation
-      const previewDuration = Math.min(simulationSpeed / 3, 200);
-      animationTimeoutRef.current = setTimeout(() => {
-        if (!isRunningRef.current) return;
-
-        setGrid(nextGrid);
-        setVisualizationState('current');
-        
-        // Schedule the next advance after updating to next generation
-        simulationTimeoutRef.current = setTimeout(() => {
-          if (isRunningRef.current) {
-            advance();
-          }
-        }, simulationSpeed - previewDuration);
-      }, previewDuration);
-    } else {
-      // Direct update without preview
-      setGrid(nextGrid);
-      
-      // Schedule the next advance
-      simulationTimeoutRef.current = setTimeout(() => {
-        if (isRunningRef.current) {
-          advance();
-        }
-      }, simulationSpeed);
-    }
-  }, [rows, cols, simulationSpeed, previewEnabled, stopSimulation, onStabilize]);
-
-  // Start simulation
-  const startSimulation = useCallback(() => {
-    if (grid.length > 0) {
-      // Clear any existing timeouts
-      if (simulationTimeoutRef.current) {
-        clearTimeout(simulationTimeoutRef.current);
-        simulationTimeoutRef.current = null;
-      }
-      if (animationTimeoutRef.current) {
-        clearTimeout(animationTimeoutRef.current);
-        animationTimeoutRef.current = null;
+        return currentActiveCells; // Return the previous grid to avoid rendering changes
       }
 
-      isRunningRef.current = true;
-      setIsRunning(true);
-      
-      // Start the first iteration
-      advance();
+      return nextActiveCells;
+    });
+  }, [getNextStateSet, stopSimulation, onStabilize]);
+
+  // Compare two sets of active cells
+  const areGridsEqual = (cells1, cells2) => {
+    if (cells1.size !== cells2.size) return false;
+    for (const cell of cells1) {
+      if (!cells2.has(cell)) return false;
     }
-  }, [grid, advance]);
 
-  // Manual step with animation
-  const manualStep = useCallback(() => {
-    if (isRunning) return;
-
-    const nextGrid = calculateNextGenerationGrid(grid, rows, cols);
-
-    if (previewEnabled) {
-      const states = calculateCellStates(grid, rows, cols);
-      setCellStates(states);
-      setVisualizationState('preview');
-
-      const previewDuration = 500; // 500ms for manual step preview
-      animationTimeoutRef.current = setTimeout(() => {
-        setVisualizationState('current');
-        setGrid(nextGrid);
-      }, previewDuration);
-    } else {
-      // Directly update to next generation without preview
-      setGrid(nextGrid);
-    }
-  }, [grid, rows, cols, isRunning, previewEnabled]);
-
-  // Preview next generation
-  const previewNextGeneration = useCallback(() => {
-    if (isRunning) return;
-    
-    if (visualizationState === 'preview') {
-      // If already in preview, switch back to current
-      setVisualizationState('current');
-    } else {
-      // Show preview
-      const states = calculateCellStates(grid, rows, cols);
-      setCellStates(states);
-      setVisualizationState('preview');
-    }
-  }, [grid, rows, cols, isRunning, visualizationState]);
-
-  // Update simulation speed
-  const updateSimulationSpeed = useCallback((newSpeed) => {
-    setSimulationSpeed(newSpeed);
-    if (isRunningRef.current) {
-      // Restart simulation with new speed
-      stopSimulation();
-      setTimeout(() => startSimulation(), 0);
-    }
-  }, [stopSimulation, startSimulation]);
+    return true;
+  };
 
   // Create the initial grid
   const createGrid = useCallback((rowCount = rows, colCount = cols) => {
     console.log('Creating grid with dimensions:', rowCount, colCount);
-    const newGrid = createEmptyGrid(rowCount, colCount);
     setRows(rowCount);
     setCols(colCount);
-    setGrid(newGrid);
-    setVisualizationState('current');
-    setCellStates([]);
-    return newGrid;
-  }, [rows, cols]);
+    setActiveCells(new Set());
+  }, []);
 
   // Toggle cell state
   const toggleCell = useCallback((rowIndex, colIndex) => {
-    if (visualizationState === 'preview') return; // Prevent toggling during preview
-    setGrid(currentGrid => {
-      const nextGrid = currentGrid.map(row => [...row]);
-      nextGrid[rowIndex][colIndex] = nextGrid[rowIndex][colIndex] ? 0 : 1;
-      return nextGrid;
+    setActiveCells(currentActiveCells => {
+      const nextActiveCells = new Set(currentActiveCells);
+      const coordStr = coordToString(rowIndex, colIndex);
+
+      if (nextActiveCells.has(coordStr)) {
+        nextActiveCells.delete(coordStr);
+      } else {
+        nextActiveCells.add(coordStr);
+      }
+
+      return nextActiveCells;
     });
-  }, [visualizationState]);
+  }, []);
 
   // Clear grid
   const clearGrid = useCallback(() => {
     stopSimulation();
-    setGrid(createEmptyGrid(rows, cols));
-    setVisualizationState('current');
-    setCellStates([]);
-  }, [stopSimulation, rows, cols]);
+    setActiveCells(new Set());
+  }, [stopSimulation]);
 
-  // Toggle preview functionality
-  const togglePreview = useCallback(() => {
-    setPreviewEnabled(prev => !prev);
-    // If turning off preview while in preview state, switch back to current
-    if (previewEnabled && visualizationState === 'preview') {
-      setVisualizationState('current');
+  // Change rules
+  const changeRules = useCallback((ruleName) => {
+    if (RULES[ruleName]) {
+      setCurrentRules(ruleName);
     }
-  }, [previewEnabled, visualizationState]);
-
-  // Update colors
-  const updateColors = useCallback((newColors) => {
-    setColors(current => ({
-      ...current,
-      ...newColors,
-    }));
   }, []);
+
+  // Convert sparse grid to 2D array (for compatibility with UI)
+  const getGridArray = useCallback(() => {
+    const gridArray = Array(rows).fill().map(() => Array(cols).fill(0));
+
+    activeCells.forEach(coordStr => {
+      const [row, col] = stringToCoord(coordStr);
+      if (row >= 0 && row < rows && col >= 0 && col < cols) {
+        gridArray[row][col] = 1;
+      }
+    });
+
+    return gridArray;
+  }, [activeCells, rows, cols]);
+
+  // Save configuration
+  const saveConfig = useCallback(() => ({
+    cells: Array.from(activeCells),
+    rows,
+    cols,
+    rules: currentRules,
+  }), [activeCells, rows, cols, currentRules]);
+
+  // Load configuration
+  const loadConfig = useCallback((config) => {
+    if (config && config.cells && Array.isArray(config.cells)) {
+      setRows(config.rows || rows);
+      setCols(config.cols || cols);
+      setActiveCells(new Set(config.cells));
+      if (config.rules && RULES[config.rules]) {
+        setCurrentRules(config.rules);
+      }
+
+      return { success: true };
+    }
+
+    return { success: false, message: 'Invalid configuration' };
+  }, [rows, cols]);
+
+  // Start simulation (same as before, using the new calculateNextGeneration)
+  const startSimulation = useCallback(() => {
+    if (activeCells.size > 0) {
+      // Clean up any existing interval
+      if (simulationIntervalRef.current) {
+        clearInterval(simulationIntervalRef.current);
+      }
+
+      // Set up new interval
+      console.log(`Starting simulation with speed: ${simulationSpeed}ms`);
+      simulationIntervalRef.current = window.setInterval(() => {
+        calculateNextGeneration();
+      }, simulationSpeed);
+
+      setIsRunning(true);
+    }
+  }, [activeCells.size, simulationSpeed, calculateNextGeneration]);
+
+  // Update simulation speed (unchanged)
+  const updateSimulationSpeed = useCallback((newSpeed) => {
+    setSimulationSpeed(newSpeed);
+
+    // If simulation is running, restart with new speed
+    if (isRunning) {
+      if (simulationIntervalRef.current) {
+        clearInterval(simulationIntervalRef.current);
+        simulationIntervalRef.current = null;
+      }
+
+      simulationIntervalRef.current = window.setInterval(() => {
+        calculateNextGeneration();
+      }, newSpeed);
+    }
+  }, [isRunning, calculateNextGeneration]);
 
   // Clean up on unmount
   useEffect(() => () => {
-    if (simulationTimeoutRef.current) {
-      clearTimeout(simulationTimeoutRef.current);
-    }
-    if (animationTimeoutRef.current) {
-      clearTimeout(animationTimeoutRef.current);
+    if (simulationIntervalRef.current) {
+      clearInterval(simulationIntervalRef.current);
     }
   }, []);
 
-  // Save configuration to text
-  const saveConfig = useCallback(() => gridToConfigText(grid, rows, cols), [grid, rows, cols]);
+  // Toggle continuous grid setting
+  const setContinuousGrid = useCallback((value) => {
+    setIsContinuous(value);
+  }, []);
 
-  // Load configuration from text
-  const loadConfig = useCallback((configText) => {
-    const result = parseConfigText(configText, rows, cols, grid);
-    if (result.success) {
-      setGrid(result.grid);
+  // Toggle or set showChanges state and calculate born/dying cells if enabled
+  const setShowGridChanges = useCallback((value) => {
+    const newShowChanges = typeof value === 'boolean' ? value : !showChanges;
+    setShowChanges(newShowChanges);
+
+    // Calculate born and dying cells when enabling
+    if (newShowChanges) {
+      const nextGeneration = getNextStateSet(activeCells);
+
+      // Find cells that will be born (in next gen but not in current)
+      const newBornCells = new Set();
+      nextGeneration.forEach(cell => {
+        if (!activeCells.has(cell)) {
+          newBornCells.add(cell);
+        }
+      });
+
+      // Find cells that will die (in current but not in next gen)
+      const newDyingCells = new Set();
+      activeCells.forEach(cell => {
+        if (!nextGeneration.has(cell)) {
+          newDyingCells.add(cell);
+        }
+      });
+
+      setBornCells(newBornCells);
+      setDyingCells(newDyingCells);
     }
-
-    return result;
-  }, [grid, rows, cols]);
+  }, [showChanges, activeCells, getNextStateSet]);
 
   return {
-    grid,
+    grid: getGridArray(),
+    activeCells,
+    ...(showChanges ? {
+      bornCells,
+      dyingCells,
+    } : {}), // Include born and dying cells instead of previousActiveCells
     rows,
     cols,
     isRunning,
     interval: simulationSpeed,
-    visualizationState,
-    cellStates,
-    previewEnabled,
-    colors,
+    currentRules,
+    isContinuous,
     createGrid,
     toggleCell,
-    nextGeneration: manualStep,
-    previewNextGeneration,
+    nextGeneration: calculateNextGeneration,
     startSimulation,
     stopSimulation,
     clearGrid,
     saveConfig,
     loadConfig,
     updateInterval: updateSimulationSpeed,
-    togglePreview,
-    updateColors,
+    changeRules,
+    setContinuousGrid,
+    setShowGridChanges,
+    getNextStateSet,
+    showChanges,
   };
 };
