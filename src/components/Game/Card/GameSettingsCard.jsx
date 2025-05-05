@@ -1,27 +1,12 @@
 import { EditOutlined } from '@ant-design/icons';
 import { Button, Card } from 'antd';
 import React, { useState } from 'react';
+import { useGameOfLife } from '../../../hooks/useGameOfLife';
 import SettingsModal from '../../modals/SettingsModal';
-import GameSettingsModal from './GameSettingsModal';
 
-const GameSettingsCard = ({
-  rows,
-  cols,
-  interval,
-  isContinuous,
-  onGenerate,
-  onUpdateInterval,
-  setContinuousGrid,
-  onClear,
-  setShowGridChanges,
-}) => {
+const GameSettingsCard = () => {
   const [isModalVisible, setIsModalVisible] = useState(false);
-  const [intervalInput, setIntervalInput] = useState(interval);
-
-  const handleIntervalChange = (value) => {
-    setIntervalInput(value);
-    onUpdateInterval(value);
-  };
+  const { rows, cols, isContinuous } = useGameOfLife();
 
   return (
     <div className="w-full mb-6 md:w-1/2">
@@ -47,32 +32,11 @@ const GameSettingsCard = ({
             {isContinuous ? 'Continuous (Edges wrap)' : 'Bounded (Fixed edges)'}
           </div>
         </div>
-
       </Card>
 
       <SettingsModal
         isVisible={isModalVisible}
         onClose={() => setIsModalVisible(false)}
-        rows={rows}
-        cols={cols}
-        isContinuous={isContinuous}
-        onGenerate={onGenerate}
-        setContinuousGrid={setContinuousGrid}
-        onClear={onClear}
-        intervalInput={intervalInput}
-        onIntervalChange={handleIntervalChange}
-        setShowGridChanges={setShowGridChanges}
-      />
-
-      <GameSettingsModal
-        isVisible={isModalVisible}
-        onClose={() => setIsModalVisible(false)}
-        rows={rows}
-        cols={cols}
-        isContinuous={isContinuous}
-        onGenerate={onGenerate}
-        setContinuousGrid={setContinuousGrid}
-        onClear={onClear}
       />
     </div>
   );

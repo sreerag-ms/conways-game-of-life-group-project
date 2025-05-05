@@ -3,6 +3,8 @@ import { Button, ColorPicker, Form, Input, InputNumber, message, Modal, Switch, 
 import { Formik } from 'formik';
 import React, { useRef, useState } from 'react';
 import * as Yup from 'yup';
+import { useGameOfLife } from '../../hooks/useGameOfLife';
+import { useGameOfLifeTheme } from '../../hooks/useGameOfLifeTheme';
 
 // Validation schema for grid settings
 const gameSettingsValidationSchema = Yup.object().shape({
@@ -30,23 +32,25 @@ const FormItemWithError = ({ label, name, touched, errors, children }) => (
 const SettingsModal = ({
   isVisible,
   onClose,
-  rows,
-  cols,
-  isContinuous,
-  onGenerate,
-  setContinuousGrid,
-  onClear,
-  onSaveConfig,
-  onLoadConfig,
-  theme,
-  updateColor,
-  resetTheme,
 }) => {
+
+  const {
+    rows,
+    cols,
+    isContinuous,
+    createGrid,
+    setContinuousGrid,
+    clearGrid,
+    saveConfig,
+    loadConfig,
+  } = useGameOfLife();
+
+  const { theme, updateColor, resetTheme } = useGameOfLifeTheme();
+
   const [activeTabKey, setActiveTabKey] = useState('grid');
   const [configText, setConfigText] = useState('');
   const textAreaRef = useRef(null);
 
-  // Color settings definitions
   const colorSettings = [
     { key: 'alive', label: 'Alive Cells', defaultColor: '#4682B4' },
     { key: 'dead', label: 'Dead Cells', defaultColor: '#ffffff' },
@@ -64,7 +68,7 @@ const SettingsModal = ({
   // Form submission handler
   const handleSubmit = (values) => {
     // Update settings
-    onGenerate(values.rows, values.cols);
+    createGrid(values.rows, values.cols);
     setContinuousGrid(values.isContinuous);
 
     // Close the modal
@@ -73,13 +77,13 @@ const SettingsModal = ({
 
   // Pattern handlers
   const handleSaveConfig = () => {
-    const config = onSaveConfig();
+    const config = saveConfig();
     setConfigText(config);
     message.success('Current grid saved to pattern editor');
   };
 
   const handleLoadConfig = () => {
-    const result = onLoadConfig(configText);
+    const result = loadConfig(configText);
     if (result.success) {
       message.success('Pattern loaded successfully');
       onClose();
@@ -153,7 +157,7 @@ const SettingsModal = ({
                     <div className="flex justify-between mt-6">
                       <Button
                         onClick={() => {
-                          onClear();
+                          clearGrid();
                           onClose();
                         }}
                         danger
