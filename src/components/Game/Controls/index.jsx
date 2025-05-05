@@ -2,20 +2,18 @@ import {
   ClearOutlined,
   PauseCircleOutlined,
   PlayCircleOutlined,
-  ReloadOutlined,
   SaveOutlined,
   SettingOutlined,
   StepForwardOutlined,
   UploadOutlined,
 } from '@ant-design/icons';
-import { Button, Drawer, Input, InputNumber, message, Space } from 'antd';
+import { Button, Drawer, Input, message } from 'antd';
 import React, { useRef, useState } from 'react';
 
 const Controls = ({
   rows,
   cols,
   isRunning,
-  interval,
   onGenerate,
   onStart,
   onStop,
@@ -23,11 +21,9 @@ const Controls = ({
   onClear,
   onSaveConfig,
   onLoadConfig,
-  onUpdateInterval,
 }) => {
   const [rowInput, setRowInput] = useState(rows);
   const [colInput, setColInput] = useState(cols);
-  const [intervalInput, setIntervalInput] = useState(interval);
   const [configDrawerOpen, setConfigDrawerOpen] = useState(false);
   const textAreaRef = useRef(null);
   const [configText, setConfigText] = useState('');
@@ -61,37 +57,6 @@ const Controls = ({
 
   return (
     <div className="mb-8">
-      <div className="flex flex-col gap-4 mb-4 md:flex-row">
-        <Space className="flex flex-wrap justify-center w-full md:justify-start" size={[8, 12]}>
-          <InputNumber
-            min={5}
-            max={1000}
-            value={rowInput}
-            onChange={setRowInput}
-            addonBefore="Rows"
-            className="w-full min-[400px]:w-auto"
-            size={window.innerWidth < 640 ? 'small' : 'middle'}
-          />
-          <InputNumber
-            min={5}
-            max={1000}
-            value={colInput}
-            onChange={setColInput}
-            addonBefore="Cols"
-            className="w-full min-[400px]:w-auto"
-            size={window.innerWidth < 640 ? 'small' : 'middle'}
-          />
-          <Button
-            type="primary"
-            icon={<ReloadOutlined />}
-            onClick={handleGenerate}
-            className="w-full min-[400px]:w-auto"
-          >
-            Generate Grid
-          </Button>
-        </Space>
-      </div>
-
       <div className="grid grid-cols-2 gap-2 mb-4 sm:flex sm:flex-wrap sm:gap-4">
         <Button
           type="primary"
@@ -138,22 +103,6 @@ const Controls = ({
         >
           Config
         </Button>
-
-        <div className="w-full col-span-2 mt-2 sm:mt-0 sm:w-auto">
-          <InputNumber
-            addonBefore="Speed"
-            min={10}
-            max={2000}
-            step={10}
-            value={intervalInput}
-            onChange={(val) => {
-              setIntervalInput(val);
-              onUpdateInterval(val);
-            }}
-            className="w-full"
-            size={window.innerWidth < 640 ? 'small' : 'middle'}
-          />
-        </div>
       </div>
 
       <Drawer

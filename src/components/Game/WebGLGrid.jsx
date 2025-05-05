@@ -11,19 +11,12 @@ const vertexShaderSource = `
   varying vec2 v_texCoord;
 
   void main() {
-    // Convert position from pixels to 0.0 to 1.0
+    // Convert from pixels to clipspace
     vec2 zeroToOne = a_position / u_resolution;
-
-    // Convert from 0->1 to 0->2
     vec2 zeroToTwo = zeroToOne * 2.0;
-
-    // Convert from 0->2 to -1->+1 (clipspace)
     vec2 clipSpace = zeroToTwo - 1.0;
 
-    // Flip Y coordinate so positive Y is up
     gl_Position = vec4(clipSpace * vec2(1, -1), 0, 1);
-
-    // Pass the texture coordinates to the fragment shader
     v_texCoord = a_texCoord;
   }
 `;
@@ -37,32 +30,61 @@ const fragmentShaderSource = `
   uniform vec4 u_gridColor;
   uniform vec2 u_gridSize;
   uniform float u_cellSize;
+  uniform bool u_showGrid;
+  uniform vec2 u_hoveredCell;
+  uniform bool u_showHoverEffect;
 
   varying vec2 v_texCoord;
 
   void main() {
-    // Calculate grid lines
-    vec2 cellPos = fract(v_texCoord * u_gridSize);
-    float gridLine = step(0.98, cellPos.x) + step(0.98, cellPos.y);
-
-    // Get cell state from texture (0 = dead, 1 = alive)
     vec4 cellState = texture2D(u_cells, v_texCoord);
 
-    // Mix cell color with grid line color
-    gl_FragColor = gridLine > 0.0
-      ? u_gridColor
-      : (cellState.r > 0.5 ? u_aliveColor : u_deadColor);
+    // Check if outside valid texture bounds
+    if (v_texCoord.x < 0.0 || v_texCoord.x > 1.0 ||
+        v_texCoord.y < 0.0 || v_texCoord.y > 1.0) {
+      gl_FragColor = vec4(0.9, 0.9, 0.9, 1.0);
+      return;
+    }
+
+    vec2 cellCoord = floor(v_texCoord * u_gridSize);
+    vec2 cellPos = fract(v_texCoord * u_gridSize);
+
+    // Draw hover effect
+    if (u_showHoverEffect &&
+        cellCoord.x == u_hoveredCell.x && cellCoord.y == u_hoveredCell.y) {
+      float borderThickness = 0.15;
+      if (cellPos.x < borderThickness || cellPos.x > (1.0 - borderThickness) ||
+          cellPos.y < borderThickness || cellPos.y > (1.0 - borderThickness)) {
+        gl_FragColor = vec4(0.5, 0.5, 0.5, 1.0);
+        return;
+      }
+    }
+
+    // Grid lines
+    float gridLine = step(0.97, cellPos.x) + step(0.97, cellPos.y);
+    if (u_showGrid && gridLine > 0.0) {
+      gl_FragColor = u_gridColor;
+      return;
+    }
+
+    // Cell color
+    gl_FragColor = cellState.r > 0.5 ? u_aliveColor : u_deadColor;
   }
 `;
 
 const WebGLGrid = ({ activeCells, rows, cols, onCellClick, cellSize = 15 }) => {
   const canvasRef = useRef(null);
+  const containerRef = useRef(null);
   const [responsiveCellSize, setResponsiveCellSize] = useState(cellSize);
   const rendererRef = useRef(null);
   const programRef = useRef(null);
   const cellsTextureRef = useRef(null);
   const canvasWidth = useRef(0);
   const canvasHeight = useRef(0);
+
+  const [showGrid, setShowGrid] = useState(true);
+  const [gridColor, setGridColor] = useState({ r: 0, g: 0, b: 0, a: 0.5 });
+  const [hoveredCell, setHoveredCell] = useState({ row: -1, col: -1 });
 
   // Calculate responsive cell size
   useEffect(() => {
@@ -92,7 +114,6 @@ const WebGLGrid = ({ activeCells, rows, cols, onCellClick, cellSize = 15 }) => {
     const canvas = canvasRef.current;
     if (!canvas) return;
 
-    // Initialize WebGL
     const gl = canvas.getContext('webgl', { antialias: false });
     if (!gl) {
       console.error('WebGL not supported');
@@ -102,18 +123,15 @@ const WebGLGrid = ({ activeCells, rows, cols, onCellClick, cellSize = 15 }) => {
 
     rendererRef.current = gl;
 
-    // Create shader program
     const vertexShader = createShader(gl, gl.VERTEX_SHADER, vertexShaderSource);
     const fragmentShader = createShader(gl, gl.FRAGMENT_SHADER, fragmentShaderSource);
     const program = createProgram(gl, vertexShader, fragmentShader);
     programRef.current = program;
 
-    // Set up position attributes
     const positionAttributeLocation = gl.getAttribLocation(program, 'a_position');
     const positionBuffer = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
 
-    // Set up attribute for texture coordinates
     const texCoordLocation = gl.getAttribLocation(program, 'a_texCoord');
     const texCoordBuffer = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, texCoordBuffer);
@@ -126,11 +144,9 @@ const WebGLGrid = ({ activeCells, rows, cols, onCellClick, cellSize = 15 }) => {
       1.0, 1.0,
     ]), gl.STATIC_DRAW);
 
-    // Create texture for cell states
     const cellsTexture = gl.createTexture();
     cellsTextureRef.current = cellsTexture;
 
-    // Store attributes and uniform locations
     programRef.current = {
       program,
       attribLocations: {
@@ -145,6 +161,9 @@ const WebGLGrid = ({ activeCells, rows, cols, onCellClick, cellSize = 15 }) => {
         deadColor: gl.getUniformLocation(program, 'u_deadColor'),
         gridColor: gl.getUniformLocation(program, 'u_gridColor'),
         gridSize: gl.getUniformLocation(program, 'u_gridSize'),
+        showGrid: gl.getUniformLocation(program, 'u_showGrid'),
+        hoveredCell: gl.getUniformLocation(program, 'u_hoveredCell'),
+        showHoverEffect: gl.getUniformLocation(program, 'u_showHoverEffect'),
       },
       buffers: {
         position: positionBuffer,
@@ -152,7 +171,7 @@ const WebGLGrid = ({ activeCells, rows, cols, onCellClick, cellSize = 15 }) => {
       },
     };
 
-    // Clean up when component unmounts
+    // Cleanup
     return () => {
       gl.deleteProgram(program);
       gl.deleteShader(vertexShader);
@@ -172,7 +191,6 @@ const WebGLGrid = ({ activeCells, rows, cols, onCellClick, cellSize = 15 }) => {
     const width = cols * responsiveCellSize;
     const height = rows * responsiveCellSize;
 
-    // Update canvas size
     canvas.width = width;
     canvas.height = height;
     canvasWidth.current = width;
@@ -181,9 +199,9 @@ const WebGLGrid = ({ activeCells, rows, cols, onCellClick, cellSize = 15 }) => {
     gl.viewport(0, 0, width, height);
 
     render();
-  }, [rows, cols, responsiveCellSize, activeCells]);
+  }, [rows, cols, responsiveCellSize, activeCells, showGrid, gridColor, hoveredCell]);
 
-  // Convert activeCells to texture data and render
+  // Render cells
   const render = useCallback(() => {
     if (!rendererRef.current || !programRef.current || !cellsTextureRef.current) return;
 
@@ -192,15 +210,14 @@ const WebGLGrid = ({ activeCells, rows, cols, onCellClick, cellSize = 15 }) => {
     const width = cols;
     const height = rows;
 
-    // Create cell state data (0 = dead, 1 = alive)
-    const cellsData = new Uint8Array(width * height * 4); // RGBA for each cell
+    const cellsData = new Uint8Array(width * height * 4);
 
     // Initialize all cells as dead
     for (let i = 0; i < cellsData.length; i += 4) {
       cellsData[i] = 0;     // R
       cellsData[i + 1] = 0; // G
       cellsData[i + 2] = 0; // B
-      cellsData[i + 3] = 255; // A (always fully opaque)
+      cellsData[i + 3] = 255; // A
     }
 
     // Mark active cells
@@ -212,7 +229,7 @@ const WebGLGrid = ({ activeCells, rows, cols, onCellClick, cellSize = 15 }) => {
       }
     });
 
-    // Set up buffer with rectangle covering entire canvas
+    // Set up buffer with rectangle covering canvas
     const left = 0;
     const right = canvasWidth.current;
     const top = 0;
@@ -236,69 +253,88 @@ const WebGLGrid = ({ activeCells, rows, cols, onCellClick, cellSize = 15 }) => {
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
     gl.texImage2D(
       gl.TEXTURE_2D,
-      0, // level
-      gl.RGBA, // internal format
+      0,
+      gl.RGBA,
       width,
       height,
-      0, // border
-      gl.RGBA, // format
-      gl.UNSIGNED_BYTE, // type
-      cellsData, // data
+      0,
+      gl.RGBA,
+      gl.UNSIGNED_BYTE,
+      cellsData,
     );
 
-    // Use the program
     gl.useProgram(program.program);
 
-    // Set uniform values
+    // Set uniforms
     gl.uniform2f(program.uniformLocations.resolution, canvasWidth.current, canvasHeight.current);
     gl.uniform1f(program.uniformLocations.cellSize, responsiveCellSize);
     gl.uniform2f(program.uniformLocations.gridSize, cols, rows);
-
-    // Set colors
-    gl.uniform4f(program.uniformLocations.aliveColor, 0.6, 0.6, 0.6, 1.0); // Gray for alive
-    gl.uniform4f(program.uniformLocations.deadColor, 1.0, 1.0, 1.0, 1.0); // White for dead
-    gl.uniform4f(program.uniformLocations.gridColor, 0.8, 0.8, 0.8, 1.0); // Light gray for grid
-
-    // Set texture
+    gl.uniform1i(program.uniformLocations.showGrid, showGrid ? 1 : 0);
+    gl.uniform2f(program.uniformLocations.hoveredCell, hoveredCell.col, hoveredCell.row);
+    gl.uniform1i(program.uniformLocations.showHoverEffect, hoveredCell.row >= 0 && hoveredCell.col >= 0 ? 1 : 0);
+    gl.uniform4f(program.uniformLocations.aliveColor, 0.6, 0.6, 0.6, 1.0);
+    gl.uniform4f(program.uniformLocations.deadColor, 1.0, 1.0, 1.0, 1.0);
+    gl.uniform4f(
+      program.uniformLocations.gridColor,
+      gridColor.r, gridColor.g, gridColor.b, gridColor.a,
+    );
     gl.uniform1i(program.uniformLocations.cells, 0);
 
-    // Set up position attribute
+    // Set up attributes
     gl.enableVertexAttribArray(program.attribLocations.position);
     gl.bindBuffer(gl.ARRAY_BUFFER, program.buffers.position);
     gl.vertexAttribPointer(program.attribLocations.position, 2, gl.FLOAT, false, 0, 0);
 
-    // Set up texCoord attribute
     gl.enableVertexAttribArray(program.attribLocations.texCoord);
     gl.bindBuffer(gl.ARRAY_BUFFER, program.buffers.texCoord);
     gl.vertexAttribPointer(program.attribLocations.texCoord, 2, gl.FLOAT, false, 0, 0);
 
     // Draw
-    gl.clearColor(1.0, 1.0, 1.0, 1.0);
+    gl.clearColor(0.9, 0.9, 0.9, 1.0);
     gl.clear(gl.COLOR_BUFFER_BIT);
     gl.drawArrays(gl.TRIANGLES, 0, 6);
-  }, [cols, rows, activeCells, responsiveCellSize]);
+  }, [cols, rows, activeCells, responsiveCellSize, showGrid, gridColor, hoveredCell]);
 
-  // Handle cell clicks
+  // Handle mouse hover
+  const handleMouseMove = useCallback((event) => {
+    const canvas = canvasRef.current;
+    const rect = canvas.getBoundingClientRect();
+
+    const mouseX = event.clientX - rect.left;
+    const mouseY = event.clientY - rect.top;
+
+    const col = Math.floor(mouseX / responsiveCellSize);
+    const row = Math.floor(mouseY / responsiveCellSize);
+
+    if (row >= 0 && row < rows && col >= 0 && col < cols) {
+      setHoveredCell({ row, col });
+    } else {
+      setHoveredCell({ row: -1, col: -1 });
+    }
+  }, [responsiveCellSize, rows, cols]);
+
+  // Clear hover on mouse leave
+  const handleMouseLeave = useCallback(() => {
+    setHoveredCell({ row: -1, col: -1 });
+  }, []);
+
+  // Handle cell click
   const handleCanvasClick = useCallback((event) => {
     const canvas = canvasRef.current;
     const rect = canvas.getBoundingClientRect();
 
-    // Calculate cell coordinates from click position
-    const scaleX = canvas.width / rect.width;
-    const scaleY = canvas.height / rect.height;
+    const mouseX = event.clientX - rect.left;
+    const mouseY = event.clientY - rect.top;
 
-    const canvasX = (event.clientX - rect.left) * scaleX;
-    const canvasY = (event.clientY - rect.top) * scaleY;
-
-    const col = Math.floor(canvasX / responsiveCellSize);
-    const row = Math.floor(canvasY / responsiveCellSize);
+    const col = Math.floor(mouseX / responsiveCellSize);
+    const row = Math.floor(mouseY / responsiveCellSize);
 
     if (row >= 0 && row < rows && col >= 0 && col < cols) {
       onCellClick(row, col);
     }
   }, [rows, cols, onCellClick, responsiveCellSize]);
 
-  // Helper functions for WebGL
+  // WebGL helpers
   function createShader(gl, type, source) {
     const shader = gl.createShader(type);
     gl.shaderSource(shader, source);
@@ -332,17 +368,62 @@ const WebGLGrid = ({ activeCells, rows, cols, onCellClick, cellSize = 15 }) => {
     return program;
   }
 
+  // Set up mouse event listeners
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    canvas.addEventListener('mousemove', handleMouseMove);
+    canvas.addEventListener('mouseleave', handleMouseLeave);
+
+    return () => {
+      canvas.removeEventListener('mousemove', handleMouseMove);
+      canvas.removeEventListener('mouseleave', handleMouseLeave);
+    };
+  }, [handleMouseMove, handleMouseLeave]);
+
   return (
-    <div className="flex flex-col items-center justify-center w-full overflow-auto">
-      <canvas
-        ref={canvasRef}
-        className="border border-gray-200"
-        onClick={handleCanvasClick}
-        style={{
-          width: `${cols * responsiveCellSize}px`,
-          height: `${rows * responsiveCellSize}px`,
-        }}
-      />
+    <div className="flex flex-col items-center w-full" ref={containerRef}>
+      {/* Grid controls toolbar */}
+      <div className="flex items-center justify-center w-full p-2 mb-3 bg-gray-100 rounded-md shadow-sm">
+        <div className="flex space-x-3">
+          <button
+            className={`px-3 py-1 rounded ${showGrid ? 'bg-blue-500 text-white' : 'bg-gray-200'}`}
+            onClick={() => setShowGrid(!showGrid)}
+            title={`${showGrid ? 'Hide' : 'Show'} grid lines`}
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16m-7 6h7" />
+            </svg>
+          </button>
+
+          <button
+            className="px-3 py-1 bg-gray-200 rounded"
+            onClick={() => setGridColor({ r: 0, g: 0, b: 0, a: 0.7 })}
+            title="Set grid lines to black"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01" />
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <div className="relative flex items-center justify-center w-full overflow-auto border border-gray-300 rounded">
+        <div className="absolute z-10 px-2 py-1 text-sm font-medium text-gray-700 bg-white bg-opacity-75 rounded shadow-sm top-2 right-2">
+          {rows} × {cols}
+        </div>
+
+        <canvas
+          ref={canvasRef}
+          className="cursor-pointer"
+          onClick={handleCanvasClick}
+          style={{
+            width: `${cols * responsiveCellSize}px`,
+            height: `${rows * responsiveCellSize}px`,
+          }}
+        />
+      </div>
     </div>
   );
 };

@@ -13,6 +13,7 @@ export const useGameOfLife = ({ onStabilize } = {}) => {
   const [isRunning, setIsRunning] = useState(false);
   const [simulationSpeed, setSimulationSpeed] = useState(DEFAULT_SIMULATION_SPEED);
   const [currentRules, setCurrentRules] = useState('GoL');
+  const [isContinuous, setIsContinuous] = useState(true); // Add continuous grid toggle
 
   // Refs
   const simulationIntervalRef = useRef(null);
@@ -43,8 +44,23 @@ export const useGameOfLife = ({ onStabilize } = {}) => {
           for (let j = -1; j <= 1; j++) {
             if (i === 0 && j === 0) continue;
 
-            const newRow = (row + i + rows) % rows;
-            const newCol = (col + j + cols) % cols;
+            // Handle continuous vs non-continuous grid
+            let newRow, newCol;
+            if (isContinuous) {
+              // Wrap around the edges (continuous)
+              newRow = (row + i + rows) % rows;
+              newCol = (col + j + cols) % cols;
+            } else {
+              // No wrapping (non-continuous)
+              newRow = row + i;
+              newCol = col + j;
+
+              // Skip if outside grid boundaries
+              if (newRow < 0 || newRow >= rows || newCol < 0 || newCol >= cols) {
+                continue;
+              }
+            }
+
             cellsToCheck.add(coordToString(newRow, newCol));
           }
         }
@@ -61,8 +77,22 @@ export const useGameOfLife = ({ onStabilize } = {}) => {
           for (let j = -1; j <= 1; j++) {
             if (i === 0 && j === 0) continue;
 
-            const neighborRow = (row + i + rows) % rows;
-            const neighborCol = (col + j + cols) % cols;
+            let neighborRow, neighborCol;
+            if (isContinuous) {
+              // Wrap around the edges (continuous)
+              neighborRow = (row + i + rows) % rows;
+              neighborCol = (col + j + cols) % cols;
+            } else {
+              // No wrapping (non-continuous)
+              neighborRow = row + i;
+              neighborCol = col + j;
+
+              // Skip if outside grid boundaries
+              if (neighborRow < 0 || neighborRow >= rows || neighborCol < 0 || neighborCol >= cols) {
+                continue;
+              }
+            }
+
             const neighborCoord = coordToString(neighborRow, neighborCol);
 
             if (currentActiveCells.has(neighborCoord)) {
@@ -95,7 +125,7 @@ export const useGameOfLife = ({ onStabilize } = {}) => {
 
       return nextActiveCells;
     });
-  }, [rows, cols, stopSimulation, onStabilize, currentRules]);
+  }, [rows, cols, stopSimulation, onStabilize, currentRules, isContinuous]);
 
   // Compare two sets of active cells
   const areGridsEqual = (cells1, cells2) => {
@@ -211,9 +241,7 @@ export const useGameOfLife = ({ onStabilize } = {}) => {
         simulationIntervalRef.current = null;
       }
 
-      console.log(`Updating simulation speed to: ${newSpeed}ms`);
       simulationIntervalRef.current = window.setInterval(() => {
-        console.log('Running next generation (after speed update)');
         calculateNextGeneration();
       }, newSpeed);
     }
@@ -226,6 +254,11 @@ export const useGameOfLife = ({ onStabilize } = {}) => {
     }
   }, []);
 
+  // Toggle continuous grid setting
+  const setContinuousGrid = useCallback((value) => {
+    setIsContinuous(value);
+  }, []);
+
   return {
     grid: getGridArray(),
     activeCells,
@@ -234,6 +267,7 @@ export const useGameOfLife = ({ onStabilize } = {}) => {
     isRunning,
     interval: simulationSpeed,
     currentRules,
+    isContinuous,
     createGrid,
     toggleCell,
     nextGeneration: calculateNextGeneration,
@@ -244,5 +278,6 @@ export const useGameOfLife = ({ onStabilize } = {}) => {
     loadConfig,
     updateInterval: updateSimulationSpeed,
     changeRules,
+    setContinuousGrid,
   };
 };

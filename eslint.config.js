@@ -31,6 +31,7 @@ export default [
 
       'func-style': ['error', 'expression'],
       'arrow-body-style': ['error', 'as-needed'],
+      'prefer-arrow-callback': ['error', { allowNamedFunctions: false }],
 
       'indent': ['error', 2, { 'SwitchCase': 1 }],
 
