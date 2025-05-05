@@ -12,6 +12,28 @@ export const areGridsEqual = (gridA, gridB) => {
   return true;
 };
 
+const countAliveNeighbors = (grid, row, col, rows, cols) => {
+  let count = 0;
+  for (let x = -1; x <= 1; x++) {
+    for (let y = -1; y <= 1; y++) {
+      if (x === 0 && y === 0) continue;
+      const neighborRow = row + x;
+      const neighborCol = col + y;
+      if (neighborRow >= 0 && neighborRow < rows && neighborCol >= 0 && neighborCol < cols) {
+        count += grid[neighborRow][neighborCol];
+      }
+    }
+  }
+  return count;
+};
+
+const determineNextCellState = (currentState, aliveNeighbors) => {
+  if (currentState) {
+    return aliveNeighbors === 2 || aliveNeighbors === 3;
+  }
+  return aliveNeighbors === 3;
+};
+
 /**
  * Calculate the next generation of cells based on Conway's Game of Life rules
  * @param {Array<Array<number>>} currentGrid - Current state of the grid
@@ -24,35 +46,39 @@ export const calculateNextGenerationGrid = (currentGrid, rows, cols) => {
 
   for (let i = 0; i < rows; i++) {
     for (let j = 0; j < cols; j++) {
-      let aliveNeighbors = 0;
-
-      // Count alive neighbors
-      for (let x = -1; x <= 1; x++) {
-        for (let y = -1; y <= 1; y++) {
-          if (x === 0 && y === 0) continue;
-          const neighborRow = i + x, neighborCol = j + y;
-          if (neighborRow >= 0 && neighborRow < rows && neighborCol >= 0 && neighborCol < cols) {
-            aliveNeighbors += currentGrid[neighborRow][neighborCol];
-          }
-        }
-      }
-
-      // Apply Game of Life rules
-      if (currentGrid[i][j]) {
-        // Cell is alive
-        if (aliveNeighbors === 2 || aliveNeighbors === 3) {
-          nextGrid[i][j] = 1; // Stay alive
-        }
-      } else {
-        // Cell is dead
-        if (aliveNeighbors === 3) {
-          nextGrid[i][j] = 1; // Become alive
-        }
-      }
+      const aliveNeighbors = countAliveNeighbors(currentGrid, i, j, rows, cols);
+      nextGrid[i][j] = determineNextCellState(currentGrid[i][j], aliveNeighbors) ? 1 : 0;
     }
   }
 
   return nextGrid;
+};
+
+const determineCellVisualizationState = (currentState, aliveNeighbors) => {
+  if (currentState) {
+    return (aliveNeighbors === 2 || aliveNeighbors === 3) ? 'survive' : 'die';
+  }
+  return aliveNeighbors === 3 ? 'born' : '';
+};
+
+/**
+ * Calculate the state of cells for visualization
+ * @param {Array<Array<number>>} currentGrid - Current state of the grid
+ * @param {number} rows - Number of rows
+ * @param {number} cols - Number of columns
+ * @returns {Array<Array<string>>} - Grid with cell states ('die', 'survive', 'born', or '')
+ */
+export const calculateCellStates = (currentGrid, rows, cols) => {
+  const stateGrid = Array.from({ length: rows }, () => Array(cols).fill(''));
+
+  for (let i = 0; i < rows; i++) {
+    for (let j = 0; j < cols; j++) {
+      const aliveNeighbors = countAliveNeighbors(currentGrid, i, j, rows, cols);
+      stateGrid[i][j] = determineCellVisualizationState(currentGrid[i][j], aliveNeighbors);
+    }
+  }
+
+  return stateGrid;
 };
 
 /**

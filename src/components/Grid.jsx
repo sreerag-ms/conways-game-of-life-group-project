@@ -1,6 +1,12 @@
 import React, { useCallback, useEffect, useState } from 'react';
 
-const Grid = ({ grid, onCellClick, cellSize = 15 }) => {
+const Grid = ({ 
+  grid, 
+  onCellClick, 
+  cellSize = 15, 
+  visualizationState = 'current',
+  cellStates = []
+}) => {
   const [responsiveCellSize, setResponsiveCellSize] = useState(cellSize);
 
   useEffect(() => {
@@ -15,10 +21,8 @@ const Grid = ({ grid, onCellClick, cellSize = 15 }) => {
       return Math.max(4, Math.min(optimalSize, cellSize));
     };
 
-    // Initial calculation
     setResponsiveCellSize(calculateCellSize());
 
-    // Recalculate on resize
     const handleResize = () => {
       setResponsiveCellSize(calculateCellSize());
     };
@@ -28,15 +32,32 @@ const Grid = ({ grid, onCellClick, cellSize = 15 }) => {
     return () => window.removeEventListener('resize', handleResize);
   }, [grid, cellSize]);
 
+  const getCellColor = useCallback((isAlive, rowIndex, colIndex) => {
+    if (visualizationState === 'preview' && cellStates[rowIndex]?.[colIndex]) {
+      const state = cellStates[rowIndex][colIndex];
+      switch (state) {
+        case 'die':
+          return 'bg-red-400';
+        case 'survive':
+          return 'bg-green-400';
+        case 'born':
+          return 'bg-blue-400';
+        default:
+          return 'bg-white';
+      }
+    }
+    
+    return isAlive ? 'bg-gray-400' : 'bg-white';
+  }, [visualizationState, cellStates]);
+
   const renderCell = useCallback((value, rowIndex, colIndex) => {
     const isAlive = value === 1;
+    const cellColor = getCellColor(isAlive, rowIndex, colIndex);
 
     return (
       <div
         key={`cell-${rowIndex}-${colIndex}`}
-        className={`border border-gray-300 transition-colors duration-150 ${
-          isAlive ? 'bg-gray-400' : 'bg-white'
-        } hover:bg-gray-200 cursor-pointer`}
+        className={`border border-gray-300 transition-colors duration-150 ${cellColor} hover:bg-gray-200 cursor-pointer`}
         style={{
           width: `${responsiveCellSize}px`,
           height: `${responsiveCellSize}px`,
@@ -44,7 +65,7 @@ const Grid = ({ grid, onCellClick, cellSize = 15 }) => {
         onClick={() => onCellClick(rowIndex, colIndex)}
       />
     );
-  }, [onCellClick, responsiveCellSize]);
+  }, [onCellClick, responsiveCellSize, getCellColor]);
 
   return (
     <div className="flex flex-col items-center justify-center w-full overflow-auto">
