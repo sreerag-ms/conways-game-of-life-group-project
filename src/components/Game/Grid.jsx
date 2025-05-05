@@ -1,24 +1,21 @@
 import React, { useCallback, useEffect, useState } from 'react';
 
-const Grid = ({ grid, onCellClick, cellSize = 15 }) => {
+const Grid = ({ activeCells, rows, cols, onCellClick, cellSize = 15 }) => {
   const [responsiveCellSize, setResponsiveCellSize] = useState(cellSize);
 
   useEffect(() => {
     const calculateCellSize = () => {
       const containerWidth = window.innerWidth > 768
-        ? Math.min(window.innerWidth - 100, 800)
-        : window.innerWidth - 40;
+        ? Math.min(window.innerWidth - 100, 800) : window.innerWidth - 40;
 
-      const gridWidth = grid[0]?.length || 20;
+      const gridWidth = cols || 20;
       const optimalSize = Math.floor(containerWidth / gridWidth);
 
       return Math.max(4, Math.min(optimalSize, cellSize));
     };
 
-    // Initial calculation
     setResponsiveCellSize(calculateCellSize());
 
-    // Recalculate on resize
     const handleResize = () => {
       setResponsiveCellSize(calculateCellSize());
     };
@@ -26,10 +23,12 @@ const Grid = ({ grid, onCellClick, cellSize = 15 }) => {
     window.addEventListener('resize', handleResize);
 
     return () => window.removeEventListener('resize', handleResize);
-  }, [grid, cellSize]);
+  }, [cols, cellSize]);
 
-  const renderCell = useCallback((value, rowIndex, colIndex) => {
-    const isAlive = value === 1;
+  const isCellAlive = useCallback((rowIndex, colIndex) => activeCells.has(`${rowIndex},${colIndex}`), [activeCells]);
+
+  const renderCell = useCallback((rowIndex, colIndex) => {
+    const isAlive = isCellAlive(rowIndex, colIndex);
 
     return (
       <div
@@ -44,7 +43,19 @@ const Grid = ({ grid, onCellClick, cellSize = 15 }) => {
         onClick={() => onCellClick(rowIndex, colIndex)}
       />
     );
-  }, [onCellClick, responsiveCellSize]);
+  }, [onCellClick, responsiveCellSize, isCellAlive]);
+
+  // Generate grid cells based on dimensions
+  const renderGrid = useCallback(() => {
+    const grid = [];
+    for (let rowIndex = 0; rowIndex < rows; rowIndex++) {
+      for (let colIndex = 0; colIndex < cols; colIndex++) {
+        grid.push(renderCell(rowIndex, colIndex));
+      }
+    }
+
+    return grid;
+  }, [rows, cols, renderCell]);
 
   return (
     <div className="flex flex-col items-center justify-center w-full overflow-auto">
@@ -52,16 +63,20 @@ const Grid = ({ grid, onCellClick, cellSize = 15 }) => {
         className="max-w-full border border-gray-200 grid-container"
         style={{
           display: 'grid',
-          gridTemplateColumns: `repeat(${grid[0]?.length || 0}, ${responsiveCellSize}px)`,
+          gridTemplateColumns: `repeat(${cols}, ${responsiveCellSize}px)`,
           gap: '0px',
         }}
       >
-        {grid.map((row, rowIndex) =>
-          row.map((cell, colIndex) => renderCell(cell, rowIndex, colIndex)),
-        )}
+        {renderGrid()}
       </div>
     </div>
   );
 };
 
-export default Grid;
+export default React.memo(Grid, (prevProps, nextProps) =>
+  (
+    prevProps.rows === nextProps.rows &&
+    prevProps.cols === nextProps.cols &&
+    prevProps.activeCells === nextProps.activeCells
+  ),
+);

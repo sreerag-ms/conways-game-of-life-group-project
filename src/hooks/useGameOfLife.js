@@ -1,24 +1,23 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { DEFAULT_COLS, DEFAULT_ROWS, DEFAULT_SIMULATION_SPEED, createEmptyGrid } from './constants';
-import {
-  areGridsEqual,
-  calculateNextGenerationGrid,
-  gridToConfigText,
-  parseConfigText,
-} from './utils';
+import { DEFAULT_COLS, DEFAULT_ROWS, DEFAULT_SIMULATION_SPEED, RULES } from './constants';
+
+// Helper to convert between representations
+const coordToString = (row, col) => `${row},${col}`;
+const stringToCoord = (str) => str.split(',').map(Number);
 
 export const useGameOfLife = ({ onStabilize } = {}) => {
   // State management
-  const [grid, setGrid] = useState([]);
+  const [activeCells, setActiveCells] = useState(new Set());
   const [rows, setRows] = useState(DEFAULT_ROWS);
   const [cols, setCols] = useState(DEFAULT_COLS);
   const [isRunning, setIsRunning] = useState(false);
   const [simulationSpeed, setSimulationSpeed] = useState(DEFAULT_SIMULATION_SPEED);
+  const [currentRules, setCurrentRules] = useState('GoL');
 
   // Refs
   const simulationIntervalRef = useRef(null);
 
-  // Stop simulation - declared early to avoid circular reference
+  // Stop simulation
   const stopSimulation = useCallback(() => {
     if (simulationIntervalRef.current) {
       clearInterval(simulationIntervalRef.current);
@@ -27,13 +26,63 @@ export const useGameOfLife = ({ onStabilize } = {}) => {
     setIsRunning(false);
   }, []);
 
-  // Calculate next generation
+  // Calculate next generation using sparse representation
   const calculateNextGeneration = useCallback(() => {
-    setGrid(currentGrid => {
-      const nextGrid = calculateNextGenerationGrid(currentGrid, rows, cols);
+    setActiveCells(currentActiveCells => {
+      const nextActiveCells = new Set();
+      const cellsToCheck = new Set();
+      const rules = RULES[currentRules];
+
+      // Add all active cells to check
+      currentActiveCells.forEach(coordStr => {
+        cellsToCheck.add(coordStr);
+
+        // Add all neighbors to check
+        const [row, col] = stringToCoord(coordStr);
+        for (let i = -1; i <= 1; i++) {
+          for (let j = -1; j <= 1; j++) {
+            if (i === 0 && j === 0) continue;
+
+            const newRow = (row + i + rows) % rows;
+            const newCol = (col + j + cols) % cols;
+            cellsToCheck.add(coordToString(newRow, newCol));
+          }
+        }
+      });
+
+      // Check all cells that might change state
+      cellsToCheck.forEach(coordStr => {
+        const [row, col] = stringToCoord(coordStr);
+        const isAlive = currentActiveCells.has(coordStr);
+
+        // Count live neighbors
+        let liveNeighbors = 0;
+        for (let i = -1; i <= 1; i++) {
+          for (let j = -1; j <= 1; j++) {
+            if (i === 0 && j === 0) continue;
+
+            const neighborRow = (row + i + rows) % rows;
+            const neighborCol = (col + j + cols) % cols;
+            const neighborCoord = coordToString(neighborRow, neighborCol);
+
+            if (currentActiveCells.has(neighborCoord)) {
+              liveNeighbors++;
+            }
+          }
+        }
+
+        // Apply rules
+        if (isAlive && rules.S.includes(liveNeighbors)) {
+          // Cell survives
+          nextActiveCells.add(coordStr);
+        } else if (!isAlive && rules.B.includes(liveNeighbors)) {
+          // Cell is born
+          nextActiveCells.add(coordStr);
+        }
+      });
 
       // Check if the grid has stabilized
-      const hasStabilized = areGridsEqual(currentGrid, nextGrid);
+      const hasStabilized = areGridsEqual(currentActiveCells, nextActiveCells);
       if (hasStabilized) {
         console.log('Grid has stabilized');
         setTimeout(() => {
@@ -41,16 +90,101 @@ export const useGameOfLife = ({ onStabilize } = {}) => {
           if (onStabilize) onStabilize();
         }, 0);
 
-        return currentGrid; // Return the previous grid to avoid rendering an empty grid
+        return currentActiveCells; // Return the previous grid to avoid rendering changes
       }
 
-      return nextGrid;
+      return nextActiveCells;
     });
-  }, [rows, cols, stopSimulation, onStabilize]);
+  }, [rows, cols, stopSimulation, onStabilize, currentRules]);
 
-  // Start simulation
+  // Compare two sets of active cells
+  const areGridsEqual = (cells1, cells2) => {
+    if (cells1.size !== cells2.size) return false;
+    for (const cell of cells1) {
+      if (!cells2.has(cell)) return false;
+    }
+
+    return true;
+  };
+
+  // Create the initial grid
+  const createGrid = useCallback((rowCount = rows, colCount = cols) => {
+    console.log('Creating grid with dimensions:', rowCount, colCount);
+    setRows(rowCount);
+    setCols(colCount);
+    setActiveCells(new Set());
+  }, []);
+
+  // Toggle cell state
+  const toggleCell = useCallback((rowIndex, colIndex) => {
+    setActiveCells(currentActiveCells => {
+      const nextActiveCells = new Set(currentActiveCells);
+      const coordStr = coordToString(rowIndex, colIndex);
+
+      if (nextActiveCells.has(coordStr)) {
+        nextActiveCells.delete(coordStr);
+      } else {
+        nextActiveCells.add(coordStr);
+      }
+
+      return nextActiveCells;
+    });
+  }, []);
+
+  // Clear grid
+  const clearGrid = useCallback(() => {
+    stopSimulation();
+    setActiveCells(new Set());
+  }, [stopSimulation]);
+
+  // Change rules
+  const changeRules = useCallback((ruleName) => {
+    if (RULES[ruleName]) {
+      setCurrentRules(ruleName);
+    }
+  }, []);
+
+  // Convert sparse grid to 2D array (for compatibility with UI)
+  const getGridArray = useCallback(() => {
+    const gridArray = Array(rows).fill().map(() => Array(cols).fill(0));
+
+    activeCells.forEach(coordStr => {
+      const [row, col] = stringToCoord(coordStr);
+      if (row >= 0 && row < rows && col >= 0 && col < cols) {
+        gridArray[row][col] = 1;
+      }
+    });
+
+    return gridArray;
+  }, [activeCells, rows, cols]);
+
+  // Save configuration
+  const saveConfig = useCallback(() => ({
+    cells: Array.from(activeCells),
+    rows,
+    cols,
+    rules: currentRules,
+  }), [activeCells, rows, cols, currentRules]);
+
+  // Load configuration
+  const loadConfig = useCallback((config) => {
+    if (config && config.cells && Array.isArray(config.cells)) {
+      setRows(config.rows || rows);
+      setCols(config.cols || cols);
+      setActiveCells(new Set(config.cells));
+      if (config.rules && RULES[config.rules]) {
+        setCurrentRules(config.rules);
+      }
+
+      return { success: true };
+    }
+
+    return { success: false, message: 'Invalid configuration' };
+  }, [rows, cols]);
+
+  // Start simulation (same as before, using the new calculateNextGeneration)
   const startSimulation = useCallback(() => {
-    if (grid.length > 0) {
+    if (activeCells.size > 0) {
       // Clean up any existing interval
       if (simulationIntervalRef.current) {
         clearInterval(simulationIntervalRef.current);
@@ -59,15 +193,14 @@ export const useGameOfLife = ({ onStabilize } = {}) => {
       // Set up new interval
       console.log(`Starting simulation with speed: ${simulationSpeed}ms`);
       simulationIntervalRef.current = window.setInterval(() => {
-        console.log('Calculating next generation');
         calculateNextGeneration();
       }, simulationSpeed);
 
       setIsRunning(true);
     }
-  }, [grid, simulationSpeed, calculateNextGeneration]);
+  }, [activeCells.size, simulationSpeed, calculateNextGeneration]);
 
-  // Update simulation speed
+  // Update simulation speed (unchanged)
   const updateSimulationSpeed = useCallback((newSpeed) => {
     setSimulationSpeed(newSpeed);
 
@@ -86,48 +219,6 @@ export const useGameOfLife = ({ onStabilize } = {}) => {
     }
   }, [isRunning, calculateNextGeneration]);
 
-  // ===== GRID MANAGEMENT =====
-
-  // Create the initial grid
-  const createGrid = useCallback((rowCount = rows, colCount = cols) => {
-    console.log('Creating grid with dimensions:', rowCount, colCount);
-    const newGrid = createEmptyGrid(rowCount, colCount);
-    setRows(rowCount);
-    setCols(colCount);
-    setGrid(newGrid);
-
-    return newGrid;
-  }, [rows, cols]);
-
-  // Toggle cell state (alive/dead)
-  const toggleCell = useCallback((rowIndex, colIndex) => {
-    setGrid(currentGrid => {
-      const nextGrid = currentGrid.map(row => [...row]);
-      nextGrid[rowIndex][colIndex] = nextGrid[rowIndex][colIndex] ? 0 : 1;
-
-      return nextGrid;
-    });
-  }, []);
-
-  // Clear grid
-  const clearGrid = useCallback(() => {
-    stopSimulation();
-    setGrid(currentGrid => createEmptyGrid(rows, cols));
-  }, [stopSimulation, rows, cols]);
-
-  // Save configuration to text
-  const saveConfig = useCallback(() => gridToConfigText(grid, rows, cols), [grid, rows, cols]);
-
-  // Load configuration from text
-  const loadConfig = useCallback((configText) => {
-    const result = parseConfigText(configText, rows, cols, grid);
-    if (result.success) {
-      setGrid(result.grid);
-    }
-
-    return result;
-  }, [grid, rows, cols]);
-
   // Clean up on unmount
   useEffect(() => () => {
     if (simulationIntervalRef.current) {
@@ -136,11 +227,13 @@ export const useGameOfLife = ({ onStabilize } = {}) => {
   }, []);
 
   return {
-    grid,
+    grid: getGridArray(),
+    activeCells,
     rows,
     cols,
     isRunning,
     interval: simulationSpeed,
+    currentRules,
     createGrid,
     toggleCell,
     nextGeneration: calculateNextGeneration,
@@ -150,5 +243,6 @@ export const useGameOfLife = ({ onStabilize } = {}) => {
     saveConfig,
     loadConfig,
     updateInterval: updateSimulationSpeed,
+    changeRules,
   };
 };

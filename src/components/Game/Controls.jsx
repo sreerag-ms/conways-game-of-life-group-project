@@ -38,11 +38,7 @@ const Controls = ({
 
       return;
     }
-    if (rowInput > 100 || colInput > 150) {
-      message.error('Grid dimensions should not exceed 100x100');
 
-      return;
-    }
     onGenerate(rowInput, colInput);
   };
 
@@ -201,4 +197,4 @@ const Controls = ({
   );
 };
 
-export default Controls;
+export default React.memo(Controls);

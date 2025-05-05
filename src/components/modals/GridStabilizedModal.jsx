@@ -1,5 +1,5 @@
 import { Modal, Typography } from 'antd';
-import React from 'react';
+import React, { memo } from 'react';
 
 const GridStabilizedModal = ({ isOpen, onClose }) => (
   <Modal
@@ -30,4 +30,4 @@ const GridStabilizedModal = ({ isOpen, onClose }) => (
   </Modal>
 );
 
-export default GridStabilizedModal;
+export default memo(GridStabilizedModal);
