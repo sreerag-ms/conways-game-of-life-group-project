@@ -7,10 +7,13 @@ import {
   StepForwardOutlined,
   DownloadOutlined,
   LineChartOutlined,
+  LineChartOutlined,
 } from '@ant-design/icons';
 import { Button, Card, ColorPicker, Popover, Slider, Switch, Tooltip } from 'antd';
 import PropTypes from 'prop-types';
+import PropTypes from 'prop-types';
 import React, { useState } from 'react';
+import ChartModal from '../../modals/ChartModal';
 import ChartModal from '../../modals/ChartModal';
 import SettingsModal from '../../modals/SettingsModal';
 
@@ -166,6 +169,7 @@ const SimulationControls = ({
               <Button
                 icon={<LineChartOutlined />}
                 onClick={() => setChartModalOpen(true)}
+                disabled={isRunning}
                 size="large"
                 shape="circle"
                 className="flex items-center justify-center"
