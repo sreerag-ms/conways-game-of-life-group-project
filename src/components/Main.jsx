@@ -11,7 +11,7 @@ const Main = () => {
 
   return (
     <>
-      <Header className="sticky top-0 z-10 flex items-center px-4 py-3 border-b border-blue-200 rounded shadow md:px-8 bg-gradient-to-r from-blue-50 via-white to-blue-100">
+      <Header className="top-0 z-10 flex items-center px-4 py-3 bg-white shadow-sm border-b-gray-200">
         <NavBar />
       </Header>
       <Layout className="min-h-screen">
