@@ -13,11 +13,13 @@ const Game = ({ setStabilizedModalOpen }) => {
     isRunning,
     interval,
     isContinuous,
+    generation,
     createGrid,
     nextGeneration,
     startSimulation,
     stopSimulation,
     clearGrid,
+    exportData,
     saveConfig,
     loadConfig,
     updateInterval,
@@ -40,11 +42,13 @@ const Game = ({ setStabilizedModalOpen }) => {
       cols={cols}
       isRunning={isRunning}
       interval={interval}
+      generation={generation}
       onGenerate={createGrid}
       onStart={startSimulation}
       onStop={stopSimulation}
       onStep={nextGeneration}
       onClear={clearGrid}
+      onExportData={exportData}
       onSaveConfig={saveConfig}
       onLoadConfig={loadConfig}
       onUpdateInterval={updateInterval}
@@ -55,8 +59,8 @@ const Game = ({ setStabilizedModalOpen }) => {
       resetTheme={resetTheme}
       theme={theme}
     />
-  ), [rows, cols, isRunning, interval, isContinuous, createGrid, startSimulation,
-    stopSimulation, nextGeneration, clearGrid, saveConfig, loadConfig, updateInterval, setContinuousGrid, setShowGridChanges, updateColor, resetTheme, theme]);
+  ), [rows, cols, isRunning, interval, isContinuous, generation, createGrid, startSimulation,
+    stopSimulation, nextGeneration, clearGrid, exportData, saveConfig, loadConfig, updateInterval, setContinuousGrid, setShowGridChanges, updateColor, resetTheme, theme]);
 
   return (
     <Content className="p-3 md:p-6 lg:p-12 bg-gradient-to-b from-gray-50 to-gray-100">

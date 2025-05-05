@@ -5,6 +5,7 @@ import {
   PlayCircleOutlined,
   SettingOutlined,
   StepForwardOutlined,
+  DownloadOutlined,
 } from '@ant-design/icons';
 import { Button, Card, ColorPicker, Popover, Slider, Switch, Tooltip } from 'antd';
 import React, { useState } from 'react';
@@ -16,12 +17,14 @@ const SimulationControls = ({
   onStop,
   onStep,
   onClear,
+  onExportData,
   setShowGridChanges,
   updateColor,
   resetTheme,
   theme,
   interval,
   onUpdateInterval,
+  generation,
 }) => {
   const [configDrawerOpen, setConfigDrawerOpen] = useState(false);
   const [colorPopoverOpen, setColorPopoverOpen] = useState(false);
@@ -143,6 +146,17 @@ const SimulationControls = ({
               </Tooltip>
             </Popover>
 
+            <Tooltip title="Export Data">
+              <Button
+                icon={<DownloadOutlined />}
+                onClick={onExportData}
+                size="large"
+                shape="circle"
+                className="flex items-center justify-center"
+                style={{ width: '50px', height: '50px', fontSize: '24px' }}
+              />
+            </Tooltip>
+
             <Tooltip title="Settings & Configuration">
               <Button
                 icon={<SettingOutlined />}
@@ -177,13 +191,20 @@ const SimulationControls = ({
               />
             </div>
 
-            <div className="flex items-center w-full">
-              <span className="mr-2 text-sm text-gray-700">Show next generation preview:</span>
-              <Switch
-                size="small"
-                onChange={checked => setShowGridChanges(checked)}
-                title="Highlight cells that will be born or die in the next generation"
-              />
+            <div className="flex flex-col w-full gap-2">
+              <div className="flex items-center justify-between w-full">
+                <span className="text-sm text-gray-700">Show next generation preview:</span>
+                <Switch
+                  size="small"
+                  onChange={checked => setShowGridChanges(checked)}
+                  title="Highlight cells that will be born or die in the next generation"
+                />
+              </div>
+
+              <div className="flex items-center justify-between w-full">
+                <span className="text-sm text-gray-700">Generation:</span>
+                <span className="text-sm font-semibold text-primary-500">{generation || 0}</span>
+              </div>
             </div>
           </div>
         </div>
