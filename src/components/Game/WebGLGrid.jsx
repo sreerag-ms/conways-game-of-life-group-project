@@ -109,6 +109,7 @@ const WebGLGrid = ({
   const canvasWidth = useRef(0);
   const canvasHeight = useRef(0);
 
+  // Set default grid visibility to true without UI control
   const [showGrid, setShowGrid] = useState(true);
   const [gridColor, setGridColor] = useState({ r: 0, g: 0, b: 0, a: 0.5 });
   const [hoveredCell, setHoveredCell] = useState({ row: -1, col: -1 });
@@ -436,36 +437,7 @@ const WebGLGrid = ({
 
   return (
     <div className="flex flex-col items-center w-full" ref={containerRef}>
-      {/* Controls */}
-      <div className="flex items-center justify-center w-full p-2 mb-3 bg-gray-100 rounded-md shadow-sm">
-        <div className="flex space-x-3">
-          <button
-            className={`px-3 py-1 rounded ${showGrid ? 'bg-blue-500 text-white' : 'bg-gray-200'}`}
-            onClick={() => setShowGrid(!showGrid)}
-            title={`${showGrid ? 'Hide' : 'Show'} grid lines`}
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16m-7 6h7" />
-            </svg>
-          </button>
-
-          <button
-            className="px-3 py-1 bg-gray-200 rounded"
-            onClick={() => setGridColor({ r: 0, g: 0, b: 0, a: 0.7 })}
-            title="Set grid lines to black"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01" />
-            </svg>
-          </button>
-        </div>
-      </div>
-
-      <div className="relative flex items-center justify-center w-full overflow-auto border border-gray-300 rounded">
-        <div className="absolute z-10 px-2 py-1 text-sm font-medium text-gray-700 bg-white bg-opacity-75 rounded shadow-sm top-2 right-2">
-          {rows} × {cols}
-        </div>
-
+      <div className="flex items-center justify-center w-full overflow-auto border border-gray-300 rounded">
         <canvas
           ref={canvasRef}
           className="cursor-pointer"

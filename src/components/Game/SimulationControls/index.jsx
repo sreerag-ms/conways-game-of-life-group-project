@@ -1,25 +1,21 @@
 import {
+  BgColorsOutlined,
   ClearOutlined,
   PauseCircleOutlined,
   PlayCircleOutlined,
   SettingOutlined,
   StepForwardOutlined,
 } from '@ant-design/icons';
-import { Button, Card, message, Slider, Switch, Tooltip } from 'antd';
-import React, { useRef, useState } from 'react';
+import { Button, Card, ColorPicker, Popover, Slider, Switch, Tooltip } from 'antd';
+import React, { useState } from 'react';
 import SettingsModal from '../../modals/SettingsModal';
 
 const SimulationControls = ({
-  rows,
-  cols,
   isRunning,
-  onGenerate,
   onStart,
   onStop,
   onStep,
   onClear,
-  onSaveConfig,
-  onLoadConfig,
   setShowGridChanges,
   updateColor,
   resetTheme,
@@ -27,11 +23,8 @@ const SimulationControls = ({
   interval,
   onUpdateInterval,
 }) => {
-  const [rowInput, setRowInput] = useState(rows);
-  const [colInput, setColInput] = useState(cols);
   const [configDrawerOpen, setConfigDrawerOpen] = useState(false);
-  const textAreaRef = useRef(null);
-  const [configText, setConfigText] = useState('');
+  const [colorPopoverOpen, setColorPopoverOpen] = useState(false);
   const [intervalInput, setIntervalInput] = useState(interval || 100);
 
   // Color settings definitions
@@ -42,41 +35,44 @@ const SimulationControls = ({
     { key: 'die', label: 'Dying Cells (Will disappear)', defaultColor: '#f87171' },
   ];
 
-  const handleGenerate = () => {
-    if (rowInput < 5 || colInput < 5) {
-      message.error('Grid dimensions should be at least 5x5');
-
-      return;
-    }
-
-    onGenerate(rowInput, colInput);
-  };
-
-  const handleSaveConfig = () => {
-    const config = onSaveConfig();
-    setConfigText(config);
-    setConfigDrawerOpen(true);
-    message.success('Configuration saved to text area');
-  };
-
-  const handleLoadConfig = () => {
-    const result = onLoadConfig(configText);
-    if (result.success) {
-      message.success('Configuration loaded successfully');
-      setConfigDrawerOpen(false);
-    } else {
-      message.error(result.message);
-    }
-  };
-
   const handleIntervalChange = (value) => {
     setIntervalInput(value);
     onUpdateInterval(value);
   };
 
+  // Color picker popover content
+  const colorPickerContent = (
+    <div className="flex flex-col gap-4" style={{ width: '250px' }}>
+      <p className="text-gray-600">
+        Customize the colors used in the grid visualization.
+      </p>
+      <div className="flex flex-col gap-3">
+        {colorSettings.map(({ key, label, defaultColor }) => (
+          <div key={key} className="flex items-center gap-3">
+            <ColorPicker
+              value={theme[key] || defaultColor}
+              onChange={(color) => updateColor(key, color.toHexString())}
+              format="hex"
+              presets={[
+                {
+                  label: 'Recommended',
+                  colors: ['#4682B4', '#ffffff', '#DAFFCB', '#f87171'],
+                },
+              ]}
+            />
+            <span className="text-sm text-gray-600">{label}</span>
+          </div>
+        ))}
+      </div>
+      <div className="flex justify-end mt-4">
+        <Button onClick={resetTheme}>Reset to Default Colors</Button>
+      </div>
+    </div>
+  );
+
   return (
-    <div className="w-full mb-6 md:pl-4">
-      <Card title="Simulation Controls" className="w-full shadow-md">
+    <div className="w-full mb-6">
+      <Card title="" className="w-full shadow-md">
         <div className="flex flex-col gap-4 md:flex-row">
           <div className="flex items-center justify-between w-full md:w-1/2">
             <Tooltip title="Start Simulation">
@@ -128,6 +124,25 @@ const SimulationControls = ({
               />
             </Tooltip>
 
+            <Popover
+              content={colorPickerContent}
+              title="Color Settings"
+              trigger="click"
+              open={colorPopoverOpen}
+              onOpenChange={setColorPopoverOpen}
+              placement="bottomRight"
+            >
+              <Tooltip title="Color Settings">
+                <Button
+                  icon={<BgColorsOutlined />}
+                  size="large"
+                  shape="circle"
+                  className="flex items-center justify-center"
+                  style={{ width: '50px', height: '50px', fontSize: '24px' }}
+                />
+              </Tooltip>
+            </Popover>
+
             <Tooltip title="Settings & Configuration">
               <Button
                 icon={<SettingOutlined />}
@@ -140,7 +155,7 @@ const SimulationControls = ({
             </Tooltip>
           </div>
 
-          <div className="flex flex-col items-center justify-between w-full gap-8 px-10 md:flex-row md:w-1/2">
+          <div className="flex flex-col items-center justify-between w-full gap-10 px-10 md:flex-row md:w-1/2">
             <div className="w-full">
               <div className="flex items-center justify-between mb-1">
                 <span className="text-sm font-medium text-gray-700">Animation Speed:</span>
