@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { useCanvasStore } from '../../../hooks/canvasStore';
 import { useGameOfLife } from '../../../hooks/useGameOfLife';
 import { useGameOfLifeTheme } from '../../../hooks/useGameOfLifeTheme';
 import { FRAGMENT_SHADER_SOURCE, VERTEX_SHADER_SOURCE } from './constants';
@@ -18,6 +19,17 @@ const WebGLGrid = ({ cellSize = 15 }) => {
   } = useGameOfLife();
 
   const { theme } = useGameOfLifeTheme();
+  const {
+    zoom,
+    panOffset,
+    activeTool,
+    isDragging,
+    setIsDragging,
+    dragStart,
+    setDragStart,
+    updatePanOffset,
+    setZoom,
+  } = useCanvasStore();
 
   const canvasRef = useRef(null);
   const containerRef = useRef(null);
@@ -270,42 +282,79 @@ const WebGLGrid = ({ cellSize = 15 }) => {
     gl.drawArrays(gl.TRIANGLES, 0, 6);
   }, [cols, rows, activeCells, bornCells, dyingCells, responsiveCellSize, showGrid, showChanges, gridColor, hoveredCell, theme]);
 
+  // Convert screen coordinates to cell coordinates, accounting for zoom and pan
+  const screenToGridCoordinates = useCallback((screenX, screenY) => {
+    const canvas = canvasRef.current;
+    if (!canvas) return { row: -1, col: -1 };
+
+    const rect = canvas.getBoundingClientRect();
+
+    const x = (screenX - rect.left) / zoom;
+    const y = (screenY - rect.top) / zoom;
+
+    const col = Math.floor(x / responsiveCellSize);
+    const row = Math.floor(y / responsiveCellSize);
+
+    return { row, col };
+  }, [zoom, panOffset, responsiveCellSize]);
+
   // Mouse event handlers
   const handleMouseMove = useCallback((event) => {
     const canvas = canvasRef.current;
-    const rect = canvas.getBoundingClientRect();
+    if (!canvas) return;
 
-    const mouseX = event.clientX - rect.left;
-    const mouseY = event.clientY - rect.top;
-
-    const col = Math.floor(mouseX / responsiveCellSize);
-    const row = Math.floor(mouseY / responsiveCellSize);
-
-    if (row >= 0 && row < rows && col >= 0 && col < cols) {
-      setHoveredCell({ row, col });
+    if (isDragging && activeTool === 'hand') {
+      // Handle panning
+      const deltaX = event.clientX - dragStart.x;
+      const deltaY = event.clientY - dragStart.y;
+      updatePanOffset(deltaX, deltaY);
+      setDragStart(event.clientX, event.clientY);
     } else {
-      setHoveredCell({ row: -1, col: -1 });
+      // Handle cell hovering
+      const { row, col } = screenToGridCoordinates(event.clientX, event.clientY);
+
+      if (row >= 0 && row < rows && col >= 0 && col < cols) {
+        setHoveredCell({ row, col });
+      } else {
+        setHoveredCell({ row: -1, col: -1 });
+      }
     }
-  }, [responsiveCellSize, rows, cols]);
+  }, [activeTool, dragStart, isDragging, rows, cols, updatePanOffset, setDragStart, screenToGridCoordinates]);
+
+  const handleMouseDown = useCallback((event) => {
+    if (activeTool === 'hand') {
+      setIsDragging(true);
+      setDragStart(event.clientX, event.clientY);
+      canvasRef.current.style.cursor = 'grabbing';
+    }
+  }, [activeTool, setIsDragging, setDragStart]);
+
+  const handleMouseUp = useCallback((event) => {
+    if (isDragging) {
+      setIsDragging(false);
+      if (activeTool === 'hand') {
+        canvasRef.current.style.cursor = 'grab';
+      }
+    }
+  }, [isDragging, activeTool, setIsDragging]);
 
   const handleMouseLeave = useCallback(() => {
     setHoveredCell({ row: -1, col: -1 });
-  }, []);
+    if (isDragging) {
+      setIsDragging(false);
+    }
+  }, [isDragging, setIsDragging]);
 
   const handleCanvasClick = useCallback((event) => {
-    const canvas = canvasRef.current;
-    const rect = canvas.getBoundingClientRect();
+    // Only handle cell clicking when using the mouse tool
+    if (activeTool !== 'mouse' || isDragging) return;
 
-    const mouseX = event.clientX - rect.left;
-    const mouseY = event.clientY - rect.top;
-
-    const col = Math.floor(mouseX / responsiveCellSize);
-    const row = Math.floor(mouseY / responsiveCellSize);
+    const { row, col } = screenToGridCoordinates(event.clientX, event.clientY);
 
     if (row >= 0 && row < rows && col >= 0 && col < cols) {
       toggleCell(row, col);
     }
-  }, [rows, cols, toggleCell, responsiveCellSize]);
+  }, [activeTool, isDragging, toggleCell, rows, cols, screenToGridCoordinates]);
 
   // Handle drag over event to indicate valid drop target
   const handleDragOver = useCallback((event) => {
@@ -327,21 +376,15 @@ const WebGLGrid = ({ cellSize = 15 }) => {
         return;
       }
 
-      // Calculate the drop position in grid coordinates
-      const canvas = canvasRef.current;
-      const rect = canvas.getBoundingClientRect();
-      const mouseX = event.clientX - rect.left;
-      const mouseY = event.clientY - rect.top;
-
-      const col = Math.floor(mouseX / responsiveCellSize);
-      const row = Math.floor(mouseY / responsiveCellSize);
+      // Calculate drop position using our helper function
+      const { row, col } = screenToGridCoordinates(event.clientX, event.clientY);
 
       // Place the pattern at the drop position
       placePattern(patternData, row, col);
     } catch (error) {
       console.error('Error handling pattern drop:', error);
     }
-  }, [placePattern, responsiveCellSize]);
+  }, [placePattern, screenToGridCoordinates]);
 
   // WebGL helpers
   const createShader = (gl, type, source) => {
@@ -376,36 +419,65 @@ const WebGLGrid = ({ cellSize = 15 }) => {
     return program;
   };
 
+  // Set cursor style based on active tool
+  useEffect(() => {
+    if (canvasRef.current) {
+      canvasRef.current.style.cursor = activeTool === 'hand'
+        ? (isDragging ? 'grabbing' : 'grab')
+        : 'pointer';
+    }
+  }, [activeTool, isDragging]);
+
   // Set up mouse event listeners
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
 
     canvas.addEventListener('mousemove', handleMouseMove);
+    canvas.addEventListener('mousedown', handleMouseDown);
+    canvas.addEventListener('mouseup', handleMouseUp);
     canvas.addEventListener('mouseleave', handleMouseLeave);
     canvas.addEventListener('dragover', handleDragOver);
     canvas.addEventListener('drop', handleDrop);
 
     return () => {
       canvas.removeEventListener('mousemove', handleMouseMove);
+      canvas.removeEventListener('mousedown', handleMouseDown);
+      canvas.removeEventListener('mouseup', handleMouseUp);
       canvas.removeEventListener('mouseleave', handleMouseLeave);
       canvas.removeEventListener('dragover', handleDragOver);
       canvas.removeEventListener('drop', handleDrop);
     };
-  }, [handleMouseMove, handleMouseLeave, handleDragOver, handleDrop]);
+  }, [handleMouseMove, handleMouseDown, handleMouseUp, handleMouseLeave, handleDragOver, handleDrop]);
 
   return (
     <div className="flex flex-col items-center w-full rounded-lg" ref={containerRef}>
-      <div className="flex items-center justify-center w-full overflow-auto border border-gray-300 rounded-lg">
-        <canvas
-          ref={canvasRef}
-          className="cursor-pointer"
-          onClick={handleCanvasClick}
+      <div className="flex items-center justify-center w-full max-h-screen overflow-auto border border-gray-500 rounded-lg ">
+        <div
           style={{
-            width: `${cols * responsiveCellSize}px`,
-            height: `${rows * responsiveCellSize}px`,
+            width: '100%',
+            height: '100%',
+            overflow: 'auto',
+            position: 'relative',
           }}
-        />
+        >
+          <div
+            style={{
+              transform: `scale(${zoom}) translate(${panOffset.x / zoom}px, ${panOffset.y / zoom}px)`,
+              transformOrigin: '0 0',
+            }}
+          >
+            <canvas
+              ref={canvasRef}
+              onClick={handleCanvasClick}
+              className='border border-gray-300 rounded-lg'
+              style={{
+                width: `${cols * responsiveCellSize}px`,
+                height: `${rows * responsiveCellSize}px`,
+              }}
+            />
+          </div>
+        </div>
       </div>
     </div>
   );

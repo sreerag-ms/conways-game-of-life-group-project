@@ -1,7 +1,6 @@
 import { create } from 'zustand';
 import { DEFAULT_COLS, DEFAULT_ROWS, DEFAULT_SIMULATION_SPEED, RULES } from './constants';
 
-// Helper to convert between representations
 const coordToString = (row, col) => `${row},${col}`;
 const stringToCoord = (str) => str.split(',').map(Number);
 
@@ -163,7 +162,7 @@ export const useGameStore = create((set, get) => ({
   collectMetrics: () => {
     const { activeCells, bornCells, dyingCells, generation, currentRules } = get();
     const timestamp = new Date().toISOString();
-    
+
     const metrics = {
       timestamp,
       generation,
@@ -197,10 +196,11 @@ export const useGameStore = create((set, get) => ({
         get().stopSimulation();
         if (onStabilize) onStabilize();
       }, 0);
+
       return;
     }
 
-    set(state => ({ 
+    set(state => ({
       activeCells: nextActiveCells,
       generation: state.generation + 1,
     }));
@@ -234,7 +234,7 @@ export const useGameStore = create((set, get) => ({
 
   clearGrid: () => {
     get().stopSimulation();
-    set({ 
+    set({
       activeCells: new Set(),
       generation: 0,
       metrics: [],
@@ -399,8 +399,7 @@ export const useGameStore = create((set, get) => ({
 
   exportData: () => {
     const { metrics } = get();
-    
-    // Create CSV content
+
     const headers = ['Timestamp', 'Generation', 'Population Size', 'Births', 'Deaths', 'Rule Set'];
     const rows = metrics.map(m => [
       m.timestamp,
@@ -413,10 +412,9 @@ export const useGameStore = create((set, get) => ({
 
     const csvContent = [
       headers.join(','),
-      ...rows.map(row => row.join(','))
+      ...rows.map(row => row.join(',')),
     ].join('\n');
 
-    // Create and download the file
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement('a');
     link.href = URL.createObjectURL(blob);
