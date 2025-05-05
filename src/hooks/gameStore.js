@@ -335,4 +335,35 @@ export const useGameStore = create((set, get) => ({
       });
     }
   },
+
+  placePattern: (pattern, startRow, startCol) => {
+    const { activeCells, rows, cols } = get();
+    const nextActiveCells = new Set(activeCells);
+
+    // Check if the pattern fits on the grid
+    if (startRow + pattern.height > rows || startCol + pattern.width > cols) {
+      return { success: false, message: 'Pattern would extend beyond grid boundaries' };
+    }
+
+    // Place the pattern on the grid
+    for (let i = 0; i < pattern.height; i++) {
+      for (let j = 0; j < pattern.width; j++) {
+        const rowIndex = startRow + i;
+        const colIndex = startCol + j;
+        const coordStr = coordToString(rowIndex, colIndex);
+
+        // If the cell in the pattern is alive (1), add it to the grid
+        if (pattern.cells[i][j] === 1) {
+          nextActiveCells.add(coordStr);
+        } else {
+          // If we want to clear cells where the pattern is placed
+          nextActiveCells.delete(coordStr);
+        }
+      }
+    }
+
+    set({ activeCells: nextActiveCells });
+
+    return { success: true };
+  },
 }));

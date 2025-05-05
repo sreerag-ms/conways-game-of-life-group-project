@@ -25,7 +25,7 @@ export const useGameOfLife = ({ onStabilize } = {}) => {
     store.updateCellChanges();
   }, [store.activeCells]);
 
-  // Return the same API as before
+  // Return the same API as before, plus placePattern
   return {
     grid: store.getGridArray(),
     activeCells: store.activeCells,
@@ -53,5 +53,6 @@ export const useGameOfLife = ({ onStabilize } = {}) => {
     setShowGridChanges: store.setShowGridChanges,
     getNextStateSet: store.getNextStateSet,
     showChanges: store.showChanges,
+    placePattern: store.placePattern, // Add this to expose the method
   };
 };

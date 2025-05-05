@@ -1,18 +1,24 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { useGameOfLife } from '../../../hooks/useGameOfLife';
+import { useGameOfLifeTheme } from '../../../hooks/useGameOfLifeTheme';
 import { FRAGMENT_SHADER_SOURCE, VERTEX_SHADER_SOURCE } from './constants';
 import { hexToRgb } from './utils';
 
-const WebGLGrid = ({
-  activeCells,
-  rows,
-  cols,
-  onCellClick,
-  cellSize = 15,
-  bornCells,
-  dyingCells,
-  showChanges,
-  theme = { alive: '#ff8888', born: '#60a5fa', die: '#f87171', dead: '#ffffff' },
-}) => {
+const WebGLGrid = ({ cellSize = 15 }) => {
+  // Get values from hooks instead of props
+  const {
+    activeCells,
+    rows,
+    cols,
+    bornCells,
+    dyingCells,
+    showChanges,
+    toggleCell,
+    placePattern, // Add this from useGameOfLife
+  } = useGameOfLife();
+
+  const { theme } = useGameOfLifeTheme();
+
   const canvasRef = useRef(null);
   const containerRef = useRef(null);
   const [responsiveCellSize, setResponsiveCellSize] = useState(cellSize);
@@ -297,9 +303,45 @@ const WebGLGrid = ({
     const row = Math.floor(mouseY / responsiveCellSize);
 
     if (row >= 0 && row < rows && col >= 0 && col < cols) {
-      onCellClick(row, col);
+      toggleCell(row, col);
     }
-  }, [rows, cols, onCellClick, responsiveCellSize]);
+  }, [rows, cols, toggleCell, responsiveCellSize]);
+
+  // Handle drag over event to indicate valid drop target
+  const handleDragOver = useCallback((event) => {
+    event.preventDefault(); // Necessary to allow dropping
+    event.dataTransfer.dropEffect = 'copy';
+  }, []);
+
+  // Handle drop event to place pattern
+  const handleDrop = useCallback((event) => {
+    event.preventDefault();
+
+    try {
+      // Get pattern data from the drag event
+      const patternData = JSON.parse(event.dataTransfer.getData('application/json'));
+
+      if (!patternData || !patternData.cells) {
+        console.error('Invalid pattern data');
+
+        return;
+      }
+
+      // Calculate the drop position in grid coordinates
+      const canvas = canvasRef.current;
+      const rect = canvas.getBoundingClientRect();
+      const mouseX = event.clientX - rect.left;
+      const mouseY = event.clientY - rect.top;
+
+      const col = Math.floor(mouseX / responsiveCellSize);
+      const row = Math.floor(mouseY / responsiveCellSize);
+
+      // Place the pattern at the drop position
+      placePattern(patternData, row, col);
+    } catch (error) {
+      console.error('Error handling pattern drop:', error);
+    }
+  }, [placePattern, responsiveCellSize]);
 
   // WebGL helpers
   const createShader = (gl, type, source) => {
@@ -341,16 +383,20 @@ const WebGLGrid = ({
 
     canvas.addEventListener('mousemove', handleMouseMove);
     canvas.addEventListener('mouseleave', handleMouseLeave);
+    canvas.addEventListener('dragover', handleDragOver);
+    canvas.addEventListener('drop', handleDrop);
 
     return () => {
       canvas.removeEventListener('mousemove', handleMouseMove);
       canvas.removeEventListener('mouseleave', handleMouseLeave);
+      canvas.removeEventListener('dragover', handleDragOver);
+      canvas.removeEventListener('drop', handleDrop);
     };
-  }, [handleMouseMove, handleMouseLeave]);
+  }, [handleMouseMove, handleMouseLeave, handleDragOver, handleDrop]);
 
   return (
-    <div className="flex flex-col items-center w-full" ref={containerRef}>
-      <div className="flex items-center justify-center w-full overflow-auto border border-gray-300 rounded">
+    <div className="flex flex-col items-center w-full rounded-lg" ref={containerRef}>
+      <div className="flex items-center justify-center w-full overflow-auto border border-gray-300 rounded-lg">
         <canvas
           ref={canvasRef}
           className="cursor-pointer"
@@ -365,14 +411,5 @@ const WebGLGrid = ({
   );
 };
 
-export default React.memo(WebGLGrid, (prevProps, nextProps) => (
-  prevProps.rows === nextProps.rows &&
-  prevProps.cols === nextProps.cols &&
-  prevProps.activeCells === nextProps.activeCells &&
-  prevProps.showChanges === nextProps.showChanges &&
-  ((!prevProps.showChanges && !nextProps.showChanges) ||
-   (prevProps.bornCells === nextProps.bornCells && prevProps.dyingCells === nextProps.dyingCells)) &&
-  prevProps.theme?.alive === nextProps.theme?.alive &&
-  prevProps.theme?.born === nextProps.theme?.born &&
-  prevProps.theme?.die === nextProps.theme?.die
-));
+// Since we're using hooks for state, we don't need the complex memo comparison
+export default WebGLGrid;
