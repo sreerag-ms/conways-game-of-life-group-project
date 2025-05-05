@@ -41,6 +41,7 @@ const SettingsModal = ({
     clearGrid,
     saveConfig,
     loadConfig,
+    changeRules,
   } = useGameOfLife();
 
   const [configText, setConfigText] = useState('');
