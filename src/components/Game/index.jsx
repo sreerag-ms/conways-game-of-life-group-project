@@ -1,4 +1,5 @@
 import { Content } from 'antd/es/layout/layout';
+import PropTypes from 'prop-types';
 import React, { useEffect, useMemo } from 'react';
 import { useGameOfLife } from '../../hooks/useGameOfLife';
 import { useGameOfLifeTheme } from '../../hooks/useGameOfLifeTheme';
@@ -7,13 +8,13 @@ import SimulationControls from './SimulationControls';
 
 const Game = ({ setStabilizedModalOpen }) => {
   const {
-    activeCells,
     rows,
     cols,
     isRunning,
     interval,
     isContinuous,
     generation,
+    metrics,
     createGrid,
     nextGeneration,
     startSimulation,
@@ -43,6 +44,7 @@ const Game = ({ setStabilizedModalOpen }) => {
       isRunning={isRunning}
       interval={interval}
       generation={generation}
+      metrics={metrics}
       onGenerate={createGrid}
       onStart={startSimulation}
       onStop={stopSimulation}
@@ -59,7 +61,7 @@ const Game = ({ setStabilizedModalOpen }) => {
       resetTheme={resetTheme}
       theme={theme}
     />
-  ), [rows, cols, isRunning, interval, isContinuous, generation, createGrid, startSimulation,
+  ), [rows, cols, isRunning, interval, isContinuous, generation, metrics, createGrid, startSimulation,
     stopSimulation, nextGeneration, clearGrid, exportData, saveConfig, loadConfig, updateInterval, setContinuousGrid, setShowGridChanges, updateColor, resetTheme, theme]);
 
   return (
@@ -71,6 +73,10 @@ const Game = ({ setStabilizedModalOpen }) => {
       </div>
     </Content>
   );
+};
+
+Game.propTypes = {
+  setStabilizedModalOpen: PropTypes.func.isRequired,
 };
 
 export default Game;

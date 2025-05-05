@@ -6,9 +6,12 @@ import {
   SettingOutlined,
   StepForwardOutlined,
   DownloadOutlined,
+  LineChartOutlined,
 } from '@ant-design/icons';
 import { Button, Card, ColorPicker, Popover, Slider, Switch, Tooltip } from 'antd';
+import PropTypes from 'prop-types';
 import React, { useState } from 'react';
+import ChartModal from '../../modals/ChartModal';
 import SettingsModal from '../../modals/SettingsModal';
 
 const SimulationControls = ({
@@ -25,9 +28,11 @@ const SimulationControls = ({
   interval,
   onUpdateInterval,
   generation,
+  metrics,
 }) => {
   const [configDrawerOpen, setConfigDrawerOpen] = useState(false);
   const [colorPopoverOpen, setColorPopoverOpen] = useState(false);
+  const [chartModalOpen, setChartModalOpen] = useState(false);
   const [intervalInput, setIntervalInput] = useState(interval || 100);
 
   // Color settings definitions
@@ -157,6 +162,17 @@ const SimulationControls = ({
               />
             </Tooltip>
 
+            <Tooltip title="Visualise Data">
+              <Button
+                icon={<LineChartOutlined />}
+                onClick={() => setChartModalOpen(true)}
+                size="large"
+                shape="circle"
+                className="flex items-center justify-center"
+                style={{ width: '50px', height: '50px', fontSize: '24px' }}
+              />
+            </Tooltip>
+
             <Tooltip title="Settings & Configuration">
               <Button
                 icon={<SettingOutlined />}
@@ -213,8 +229,40 @@ const SimulationControls = ({
         isVisible={configDrawerOpen}
         onClose={() => setConfigDrawerOpen(false)}
       />
+      <ChartModal
+        isVisible={chartModalOpen}
+        onClose={() => setChartModalOpen(false)}
+        metrics={metrics}
+      />
     </div>
   );
+};
+
+SimulationControls.propTypes = {
+  isRunning: PropTypes.bool.isRequired,
+  onStart: PropTypes.func.isRequired,
+  onStop: PropTypes.func.isRequired,
+  onStep: PropTypes.func.isRequired,
+  onClear: PropTypes.func.isRequired,
+  onExportData: PropTypes.func.isRequired,
+  setShowGridChanges: PropTypes.func.isRequired,
+  updateColor: PropTypes.func.isRequired,
+  resetTheme: PropTypes.func.isRequired,
+  theme: PropTypes.shape({
+    alive: PropTypes.string,
+    dead: PropTypes.string,
+    born: PropTypes.string,
+    die: PropTypes.string,
+  }).isRequired,
+  interval: PropTypes.number.isRequired,
+  onUpdateInterval: PropTypes.func.isRequired,
+  generation: PropTypes.number.isRequired,
+  metrics: PropTypes.arrayOf(PropTypes.shape({
+    generation: PropTypes.number.isRequired,
+    populationSize: PropTypes.number.isRequired,
+    births: PropTypes.number.isRequired,
+    deaths: PropTypes.number.isRequired,
+  })).isRequired,
 };
 
 export default React.memo(SimulationControls);
