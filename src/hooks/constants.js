@@ -1,17 +1,27 @@
+export const DEFAULT_COLORS = {
+  alive: '#4682B4',   // gray-400
+  dead: '#ffffff',    // white
+  born: '#DAFFCB',    // blue-400
+  die: '#f87171',     // red-400
+};
+
 // Default grid dimensions
 export const DEFAULT_ROWS = 20;
 export const DEFAULT_COLS = 20;
 
 // Default simulation settings
-export const DEFAULT_SIMULATION_SPEED = 500;
+export const DEFAULT_SIMULATION_SPEED = 100;
 
-// Default colors
-export const DEFAULT_COLORS = {
-  alive: '#9ca3af',   // gray-400
-  dead: '#ffffff',    // white
-  born: '#60a5fa',    // blue-400
-  die: '#f87171',     // red-400
+// Rule definitions
+export const RULES = {
+  'GoL': {
+    name: 'Conway\'s Game of Life',
+    S: [2, 3],
+    B: [3],
+  },
+  'HighLife': {
+    name: 'HighLife',
+    S: [2, 3],
+    B: [3, 6],
+  },
 };
-
-// Grid creation function
-export const createEmptyGrid = (rows, cols) => Array(rows).fill().map(() => Array(cols).fill(0));
