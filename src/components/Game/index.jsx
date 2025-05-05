@@ -2,8 +2,8 @@ import { Content } from 'antd/es/layout/layout';
 import React, { useEffect, useMemo } from 'react';
 import { useGameOfLife } from '../../hooks/useGameOfLife';
 import { useGameOfLifeTheme } from '../../hooks/useGameOfLifeTheme';
+import GridSection from './GridSection';
 import SimulationControls from './SimulationControls';
-import WebGLGrid from './WebGLGrid';
 
 const Game = ({ setStabilizedModalOpen }) => {
   const {
@@ -14,7 +14,6 @@ const Game = ({ setStabilizedModalOpen }) => {
     interval,
     isContinuous,
     createGrid,
-    toggleCell,
     nextGeneration,
     startSimulation,
     stopSimulation,
@@ -23,9 +22,6 @@ const Game = ({ setStabilizedModalOpen }) => {
     loadConfig,
     updateInterval,
     setContinuousGrid,
-    bornCells,
-    dyingCells,
-    showChanges,
     setShowGridChanges,
   } = useGameOfLife({
     onStabilize: () => setStabilizedModalOpen(true),
@@ -67,16 +63,7 @@ const Game = ({ setStabilizedModalOpen }) => {
       {controlsComponent}
 
       <div className="pb-4 overflow-auto">
-        <WebGLGrid
-          rows={rows}
-          cols={cols}
-          activeCells={activeCells}
-          onCellClick={toggleCell}
-          theme={theme}
-          dyingCells={dyingCells}
-          bornCells={bornCells}
-          showChanges={showChanges}
-        />
+        <GridSection />
       </div>
     </Content>
   );
