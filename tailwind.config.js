@@ -21,6 +21,7 @@ export default {
           800: '#092f30',
           900: '#06181a',
         },
+        'border-primary': '#127475',
         secondary: '#f5dfbb',
         accent: '#f2542d',
       },

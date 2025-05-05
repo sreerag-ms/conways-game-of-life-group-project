@@ -452,7 +452,7 @@ const WebGLGrid = ({ cellSize = 15 }) => {
 
   return (
     <div className="flex flex-col items-center w-full rounded-lg" ref={containerRef}>
-      <div className="flex items-center justify-center w-full overflow-auto border border-gray-300 rounded-lg">
+      <div className="flex items-center justify-center w-full max-h-screen overflow-auto border border-gray-500 rounded-lg ">
         <div
           style={{
             width: '100%',
@@ -470,6 +470,7 @@ const WebGLGrid = ({ cellSize = 15 }) => {
             <canvas
               ref={canvasRef}
               onClick={handleCanvasClick}
+              className='border border-gray-300 rounded-lg'
               style={{
                 width: `${cols * responsiveCellSize}px`,
                 height: `${rows * responsiveCellSize}px`,
