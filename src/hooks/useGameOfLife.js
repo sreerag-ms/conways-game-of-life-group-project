@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { DEFAULT_COLS, DEFAULT_ROWS, DEFAULT_SIMULATION_SPEED, createEmptyGrid } from './constants';
+import { DEFAULT_COLS, DEFAULT_ROWS, DEFAULT_SIMULATION_SPEED, DEFAULT_COLORS, createEmptyGrid } from './constants';
 import {
   areGridsEqual,
   calculateNextGenerationGrid,
@@ -18,6 +18,7 @@ export const useGameOfLife = ({ onStabilize } = {}) => {
   const [visualizationState, setVisualizationState] = useState('current');
   const [cellStates, setCellStates] = useState([]);
   const [previewEnabled, setPreviewEnabled] = useState(true);
+  const [colors, setColors] = useState(DEFAULT_COLORS);
 
   // Refs
   const simulationTimeoutRef = useRef(null);
@@ -200,6 +201,14 @@ export const useGameOfLife = ({ onStabilize } = {}) => {
     }
   }, [previewEnabled, visualizationState]);
 
+  // Update colors
+  const updateColors = useCallback((newColors) => {
+    setColors(current => ({
+      ...current,
+      ...newColors,
+    }));
+  }, []);
+
   // Clean up on unmount
   useEffect(() => () => {
     if (simulationTimeoutRef.current) {
@@ -232,6 +241,7 @@ export const useGameOfLife = ({ onStabilize } = {}) => {
     visualizationState,
     cellStates,
     previewEnabled,
+    colors,
     createGrid,
     toggleCell,
     nextGeneration: manualStep,
@@ -243,5 +253,6 @@ export const useGameOfLife = ({ onStabilize } = {}) => {
     loadConfig,
     updateInterval: updateSimulationSpeed,
     togglePreview,
+    updateColors,
   };
 };

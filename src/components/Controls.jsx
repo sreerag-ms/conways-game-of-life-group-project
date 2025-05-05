@@ -1,4 +1,5 @@
 import {
+  BgColorsOutlined,
   ClearOutlined,
   EyeOutlined,
   PauseCircleOutlined,
@@ -9,7 +10,7 @@ import {
   StepForwardOutlined,
   UploadOutlined,
 } from '@ant-design/icons';
-import { Button, Drawer, Input, InputNumber, message, Space, Switch } from 'antd';
+import { Button, ColorPicker, Drawer, Input, InputNumber, message, Space, Switch, Tabs } from 'antd';
 import PropTypes from 'prop-types';
 import React, { useRef, useState } from 'react';
 
@@ -20,6 +21,7 @@ const Controls = ({
   interval,
   visualizationState,
   previewEnabled,
+  colors,
   onGenerate,
   onStart,
   onStop,
@@ -30,6 +32,7 @@ const Controls = ({
   onUpdateInterval,
   onPreviewNext,
   onTogglePreview,
+  onUpdateColors,
 }) => {
   const [rowInput, setRowInput] = useState(rows);
   const [colInput, setColInput] = useState(cols);
@@ -68,6 +71,13 @@ const Controls = ({
       message.error(result.message);
     }
   };
+
+  const colorSettings = [
+    { key: 'alive', label: 'Living Cells', defaultColor: '#9ca3af' },
+    { key: 'dead', label: 'Dead Cells', defaultColor: '#ffffff' },
+    { key: 'born', label: 'Born Cells', defaultColor: '#60a5fa' },
+    { key: 'die', label: 'Dying Cells', defaultColor: '#f87171' },
+  ];
 
   return (
     <div className="mb-8">
@@ -191,34 +201,74 @@ const Controls = ({
         width={window.innerWidth < 768 ? '100%' : 400}
         height={window.innerWidth < 768 ? '80%' : undefined}
       >
-        <div className="flex flex-col gap-4">
-          <p className="text-gray-600">
-            Use 0's and 1's to define your pattern. Each row must match the grid width.
-          </p>
-          <Input.TextArea
-            ref={textAreaRef}
-            value={configText}
-            onChange={(e) => setConfigText(e.target.value)}
-            rows={12}
-            placeholder="Initial configuration: use 0/1 rows"
-            className="font-mono"
-          />
-          <div className="flex justify-end gap-2">
-            <Button
-              icon={<SaveOutlined />}
-              onClick={handleSaveConfig}
-            >
-              Save Current Grid
-            </Button>
-            <Button
-              type="primary"
-              icon={<UploadOutlined />}
-              onClick={handleLoadConfig}
-            >
-              Load Configuration
-            </Button>
-          </div>
-        </div>
+        <Tabs
+          items={[
+            {
+              key: 'pattern',
+              label: 'Pattern',
+              children: (
+                <div className="flex flex-col gap-4">
+                  <p className="text-gray-600">
+                    Use 0's and 1's to define your pattern. Each row must match the grid width.
+                  </p>
+                  <Input.TextArea
+                    ref={textAreaRef}
+                    value={configText}
+                    onChange={(e) => setConfigText(e.target.value)}
+                    rows={12}
+                    placeholder="Initial configuration: use 0/1 rows"
+                    className="font-mono"
+                  />
+                  <div className="flex justify-end gap-2">
+                    <Button
+                      icon={<SaveOutlined />}
+                      onClick={handleSaveConfig}
+                    >
+                      Save Current Grid
+                    </Button>
+                    <Button
+                      type="primary"
+                      icon={<UploadOutlined />}
+                      onClick={handleLoadConfig}
+                    >
+                      Load Configuration
+                    </Button>
+                  </div>
+                </div>
+              ),
+            },
+            {
+              key: 'colors',
+              label: 'Colors',
+              icon: <BgColorsOutlined />,
+              children: (
+                <div className="flex flex-col gap-4">
+                  <p className="text-gray-600">
+                    Customize the colors used in the grid visualization.
+                  </p>
+                  <div className="flex flex-col gap-3">
+                    {colorSettings.map(({ key, label, defaultColor }) => (
+                      <div key={key} className="flex items-center gap-3">
+                        <ColorPicker
+                          value={colors[key] || defaultColor}
+                          onChange={(color) => onUpdateColors({ [key]: color.toHexString() })}
+                          format="hex"
+                          presets={[
+                            {
+                              label: 'Recommended',
+                              colors: ['#9ca3af', '#ffffff', '#60a5fa', '#f87171'],
+                            },
+                          ]}
+                        />
+                        <span className="text-sm text-gray-600">{label}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ),
+            },
+          ]}
+        />
       </Drawer>
     </div>
   );
@@ -231,6 +281,12 @@ Controls.propTypes = {
   interval: PropTypes.number.isRequired,
   visualizationState: PropTypes.oneOf(['current', 'preview', 'next']).isRequired,
   previewEnabled: PropTypes.bool.isRequired,
+  colors: PropTypes.shape({
+    alive: PropTypes.string,
+    dead: PropTypes.string,
+    born: PropTypes.string,
+    die: PropTypes.string,
+  }).isRequired,
   onGenerate: PropTypes.func.isRequired,
   onStart: PropTypes.func.isRequired,
   onStop: PropTypes.func.isRequired,
@@ -241,6 +297,7 @@ Controls.propTypes = {
   onUpdateInterval: PropTypes.func.isRequired,
   onPreviewNext: PropTypes.func.isRequired,
   onTogglePreview: PropTypes.func.isRequired,
+  onUpdateColors: PropTypes.func.isRequired,
 };
 
 export default Controls;
