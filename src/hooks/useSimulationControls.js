@@ -17,6 +17,11 @@ export const useSimulationControls = ({ onStabilize } = {}) => {
     updateInterval,
     showChanges,
     getMetrics,
+    getGridDimensions,
+    loadConfig,
+    changeRules,
+    createGrid,
+    setContinuousGrid,
   ] = useGameStore(
     state => [
       state.isRunning,
@@ -30,6 +35,11 @@ export const useSimulationControls = ({ onStabilize } = {}) => {
       state.updateInterval,
       state.showChanges,
       state.getMetrics,
+      state.getGridDimensions,
+      state.loadConfig,
+      state.changeRules,
+      state.createGrid,
+      state.setContinuousGrid,
     ],
     shallow,
   );
@@ -46,5 +56,10 @@ export const useSimulationControls = ({ onStabilize } = {}) => {
     updateInterval,
     showChanges,
     getMetrics,
+    getGridDimensions,
+    loadConfig,
+    changeRules,
+    createGrid,
+    setContinuousGrid,
   };
 };

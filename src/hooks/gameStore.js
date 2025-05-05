@@ -425,4 +425,10 @@ export const useGameStore = create((set, get) => ({
     link.click();
     document.body.removeChild(link);
   },
+
+  getGridDimensions: () => {
+    const { rows, cols } = get();
+
+    return { rows, cols };
+  },
 }));
