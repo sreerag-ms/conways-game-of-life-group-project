@@ -1,7 +1,6 @@
 import { Layout } from 'antd';
 import React, { useState } from 'react';
 import Game from './Game';
-import NavBar from './NavBar';
 import GridStabilizedModal from './modals/GridStabilizedModal';
 
 const { Header, Content, Footer } = Layout;
@@ -11,9 +10,9 @@ const Main = () => {
 
   return (
     <>
-      <Header className="top-0 flex items-center px-4 py-3 bg-white border-b border-gray-400 shadow-sm border-b-gray-200">
+      {/* <Header className="top-0 flex items-center px-4 py-3 bg-white border-b border-gray-400 shadow-sm border-b-gray-200">
         <NavBar />
-      </Header>
+      </Header> */}
       <Layout className="min-h-screen">
         <Game setStabilizedModalOpen={setStabilizedModalOpen} />
         <GridStabilizedModal isOpen={stabilizedModalOpen} onClose={() => setStabilizedModalOpen(false)} />

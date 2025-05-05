@@ -2,30 +2,24 @@ import { useEffect, useRef } from 'react';
 import { useGameStore } from './gameStore';
 
 export const useGameOfLife = ({ onStabilize } = {}) => {
-  // Reference to the onStabilize callback so it can be accessed in the store
   const onStabilizeRef = useRef(onStabilize);
 
-  // Update the ref whenever onStabilize changes
   useEffect(() => {
     onStabilizeRef.current = onStabilize;
   }, [onStabilize]);
 
-  // Get all state and methods from the store
   const store = useGameStore();
 
-  // Clean up on unmount
   useEffect(() => () => {
     if (store.simulationIntervalRef) {
       clearInterval(store.simulationIntervalRef);
     }
   }, [store.simulationIntervalRef]);
 
-  // Update cell changes when active cells change
   useEffect(() => {
     store.updateCellChanges();
   }, [store.activeCells]);
 
-  // Return the same API as before, plus exportData and metrics
   return {
     grid: store.getGridArray(),
     activeCells: store.activeCells,
@@ -40,7 +34,7 @@ export const useGameOfLife = ({ onStabilize } = {}) => {
     currentRules: store.currentRules,
     isContinuous: store.isContinuous,
     generation: store.generation,
-    metrics: store.metrics, // Add this line to expose metrics
+    metrics: store.metrics,
     createGrid: store.createGrid,
     toggleCell: store.toggleCell,
     nextGeneration: () => store.calculateNextGeneration(onStabilizeRef.current),
@@ -56,6 +50,6 @@ export const useGameOfLife = ({ onStabilize } = {}) => {
     getNextStateSet: store.getNextStateSet,
     showChanges: store.showChanges,
     placePattern: store.placePattern,
-    exportData: store.exportData, // Add the exportData function
+    exportData: store.exportData,
   };
 };
