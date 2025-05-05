@@ -25,7 +25,7 @@ export const useGameOfLife = ({ onStabilize } = {}) => {
     store.updateCellChanges();
   }, [store.activeCells]);
 
-  // Return the same API as before, plus exportData
+  // Return the same API as before, plus exportData and metrics
   return {
     grid: store.getGridArray(),
     activeCells: store.activeCells,
@@ -40,6 +40,7 @@ export const useGameOfLife = ({ onStabilize } = {}) => {
     currentRules: store.currentRules,
     isContinuous: store.isContinuous,
     generation: store.generation,
+    metrics: store.metrics, // Add this line to expose metrics
     createGrid: store.createGrid,
     toggleCell: store.toggleCell,
     nextGeneration: () => store.calculateNextGeneration(onStabilizeRef.current),
