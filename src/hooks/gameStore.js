@@ -120,34 +120,33 @@ export const useGameStore = create((set, get) => ({
   },
 
   updateCellChanges: () => {
-    const { activeCells, showChanges } = get();
+    const { activeCells } = get();
     set({ previousActiveCells: new Set(activeCells) });
 
-    // If showChanges is enabled, calculate born and dying cells
-    if (showChanges) {
-      const nextGeneration = get().getNextStateSet();
+    // Always calculate next generation metrics
+    const nextGeneration = get().getNextStateSet();
 
-      // Find cells that will be born (in next gen but not in current)
-      const newBornCells = new Set();
-      nextGeneration.forEach(cell => {
-        if (!activeCells.has(cell)) {
-          newBornCells.add(cell);
-        }
-      });
+    // Find cells that will be born (in next gen but not in current)
+    const newBornCells = new Set();
+    nextGeneration.forEach(cell => {
+      if (!activeCells.has(cell)) {
+        newBornCells.add(cell);
+      }
+    });
 
-      // Find cells that will die (in current but not in next gen)
-      const newDyingCells = new Set();
-      activeCells.forEach(cell => {
-        if (!nextGeneration.has(cell)) {
-          newDyingCells.add(cell);
-        }
-      });
+    // Find cells that will die (in current but not in next gen)
+    const newDyingCells = new Set();
+    activeCells.forEach(cell => {
+      if (!nextGeneration.has(cell)) {
+        newDyingCells.add(cell);
+      }
+    });
 
-      set({
-        bornCells: newBornCells,
-        dyingCells: newDyingCells,
-      });
-    }
+    // Always update the born/dying cells for metrics
+    set({
+      bornCells: newBornCells,
+      dyingCells: newDyingCells,
+    });
   },
 
   stopSimulation: () => {
@@ -182,7 +181,7 @@ export const useGameStore = create((set, get) => ({
   },
 
   calculateNextGeneration: (onStabilize) => {
-    const { activeCells, generation } = get();
+    const { activeCells } = get();
 
     // Store the current state before changing
     set({ previousActiveCells: new Set(activeCells) });

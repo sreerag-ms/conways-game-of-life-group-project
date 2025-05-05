@@ -166,6 +166,7 @@ const SimulationControls = ({
               <Button
                 icon={<LineChartOutlined />}
                 onClick={() => setChartModalOpen(true)}
+                disabled={isRunning}
                 size="large"
                 shape="circle"
                 className="flex items-center justify-center"
