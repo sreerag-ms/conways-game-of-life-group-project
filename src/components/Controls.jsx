@@ -1,5 +1,6 @@
 import {
   ClearOutlined,
+  EyeOutlined,
   PauseCircleOutlined,
   PlayCircleOutlined,
   ReloadOutlined,
@@ -8,7 +9,8 @@ import {
   StepForwardOutlined,
   UploadOutlined,
 } from '@ant-design/icons';
-import { Button, Drawer, Input, InputNumber, message, Space } from 'antd';
+import { Button, Drawer, Input, InputNumber, message, Space, Switch } from 'antd';
+import PropTypes from 'prop-types';
 import React, { useRef, useState } from 'react';
 
 const Controls = ({
@@ -16,6 +18,8 @@ const Controls = ({
   cols,
   isRunning,
   interval,
+  visualizationState,
+  previewEnabled,
   onGenerate,
   onStart,
   onStop,
@@ -24,6 +28,8 @@ const Controls = ({
   onSaveConfig,
   onLoadConfig,
   onUpdateInterval,
+  onPreviewNext,
+  onTogglePreview,
 }) => {
   const [rowInput, setRowInput] = useState(rows);
   const [colInput, setColInput] = useState(cols);
@@ -127,6 +133,15 @@ const Controls = ({
           Next
         </Button>
         <Button
+          icon={<EyeOutlined />}
+          onClick={onPreviewNext}
+          disabled={isRunning}
+          className={`w-full sm:w-auto ${visualizationState === 'preview' ? 'ant-btn-primary' : ''}`}
+          size={window.innerWidth < 640 ? 'small' : 'middle'}
+        >
+          Preview
+        </Button>
+        <Button
           icon={<ClearOutlined />}
           onClick={onClear}
           className="w-full sm:w-auto"
@@ -143,7 +158,15 @@ const Controls = ({
           Config
         </Button>
 
-        <div className="w-full col-span-2 mt-2 sm:mt-0 sm:w-auto">
+        <div className="flex items-center gap-4 w-full col-span-2 mt-2 sm:mt-0 sm:w-auto">
+          <div className="flex items-center gap-2">
+            <Switch
+              size="small"
+              checked={previewEnabled}
+              onChange={onTogglePreview}
+            />
+            <span className="text-sm text-gray-600">Preview</span>
+          </div>
           <InputNumber
             addonBefore="Speed"
             min={10}
@@ -199,6 +222,25 @@ const Controls = ({
       </Drawer>
     </div>
   );
+};
+
+Controls.propTypes = {
+  rows: PropTypes.number.isRequired,
+  cols: PropTypes.number.isRequired,
+  isRunning: PropTypes.bool.isRequired,
+  interval: PropTypes.number.isRequired,
+  visualizationState: PropTypes.oneOf(['current', 'preview', 'next']).isRequired,
+  previewEnabled: PropTypes.bool.isRequired,
+  onGenerate: PropTypes.func.isRequired,
+  onStart: PropTypes.func.isRequired,
+  onStop: PropTypes.func.isRequired,
+  onStep: PropTypes.func.isRequired,
+  onClear: PropTypes.func.isRequired,
+  onSaveConfig: PropTypes.func.isRequired,
+  onLoadConfig: PropTypes.func.isRequired,
+  onUpdateInterval: PropTypes.func.isRequired,
+  onPreviewNext: PropTypes.func.isRequired,
+  onTogglePreview: PropTypes.func.isRequired,
 };
 
 export default Controls;

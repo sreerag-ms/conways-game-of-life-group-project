@@ -18,15 +18,20 @@ const App = () => {
     cols,
     isRunning,
     interval,
+    visualizationState,
+    cellStates,
+    previewEnabled,
     createGrid,
     toggleCell,
     nextGeneration,
+    previewNextGeneration,
     startSimulation,
     stopSimulation,
     clearGrid,
     saveConfig,
     loadConfig,
     updateInterval,
+    togglePreview,
   } = useGameOfLife({
     onStabilize: () => setStabilizedModalOpen(true),
   });
@@ -63,13 +68,13 @@ const App = () => {
           </div>
         </Header>
         <Content className="p-3 md:p-6 lg:p-12 bg-gradient-to-b from-gray-50 to-gray-100">
-          {/* <div className="max-w-6xl mx-auto space-y-4 md:space-y-8"> */}
-          {/* <div className="p-3 bg-white rounded-lg shadow-lg md:p-6"> */}
           <Controls
             rows={rows}
             cols={cols}
             isRunning={isRunning}
             interval={interval}
+            visualizationState={visualizationState}
+            previewEnabled={previewEnabled}
             onGenerate={createGrid}
             onStart={startSimulation}
             onStop={stopSimulation}
@@ -78,6 +83,8 @@ const App = () => {
             onSaveConfig={saveConfig}
             onLoadConfig={loadConfig}
             onUpdateInterval={updateInterval}
+            onPreviewNext={previewNextGeneration}
+            onTogglePreview={togglePreview}
           />
 
           <div className="pb-4 overflow-auto">
@@ -85,11 +92,11 @@ const App = () => {
               grid={grid}
               onCellClick={toggleCell}
               cellSize={Math.max(6, Math.min(15, 600 / Math.max(rows, cols)))}
+              visualizationState={visualizationState}
+              cellStates={cellStates}
             />
           </div>
-          {/* </div> */}
 
-          {/* </div> */}
           <GridStabilizedModal isOpen={stabilizedModalOpen} onClose={() => setStabilizedModalOpen(false)} />
         </Content>
       </Layout>
