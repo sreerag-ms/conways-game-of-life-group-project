@@ -1,6 +1,7 @@
 import { EditOutlined } from '@ant-design/icons';
 import { Button, Card } from 'antd';
 import React, { useState } from 'react';
+import SettingsModal from '../../modals/SettingsModal';
 import GameSettingsModal from './GameSettingsModal';
 
 const GameSettingsCard = ({
@@ -48,6 +49,20 @@ const GameSettingsCard = ({
         </div>
 
       </Card>
+
+      <SettingsModal
+        isVisible={isModalVisible}
+        onClose={() => setIsModalVisible(false)}
+        rows={rows}
+        cols={cols}
+        isContinuous={isContinuous}
+        onGenerate={onGenerate}
+        setContinuousGrid={setContinuousGrid}
+        onClear={onClear}
+        intervalInput={intervalInput}
+        onIntervalChange={handleIntervalChange}
+        setShowGridChanges={setShowGridChanges}
+      />
 
       <GameSettingsModal
         isVisible={isModalVisible}
