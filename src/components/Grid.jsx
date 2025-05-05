@@ -38,12 +38,11 @@ const Grid = ({
       switch (state) {
         case 'die':
           return 'bg-red-400';
-        case 'survive':
-          return 'bg-green-400';
         case 'born':
           return 'bg-blue-400';
         default:
-          return 'bg-white';
+          // For stable cells (empty state), show their current state without preview color
+          return isAlive ? 'bg-gray-400' : 'bg-white';
       }
     }
     

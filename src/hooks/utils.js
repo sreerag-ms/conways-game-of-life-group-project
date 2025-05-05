@@ -56,8 +56,15 @@ export const calculateNextGenerationGrid = (currentGrid, rows, cols) => {
 
 const determineCellVisualizationState = (currentState, aliveNeighbors) => {
   if (currentState) {
-    return (aliveNeighbors === 2 || aliveNeighbors === 3) ? 'survive' : 'die';
+    // For alive cells
+    if (aliveNeighbors === 2 || aliveNeighbors === 3) {
+      // Cell stays alive, but we don't show a preview color since it's stable
+      return '';
+    }
+    // Cell will die
+    return 'die';
   }
+  // For dead cells
   return aliveNeighbors === 3 ? 'born' : '';
 };
 
