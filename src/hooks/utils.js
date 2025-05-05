@@ -34,28 +34,6 @@ const determineNextCellState = (currentState, aliveNeighbors) => {
   return aliveNeighbors === 3;
 };
 
-const countAliveNeighbors = (grid, row, col, rows, cols) => {
-  let count = 0;
-  for (let x = -1; x <= 1; x++) {
-    for (let y = -1; y <= 1; y++) {
-      if (x === 0 && y === 0) continue;
-      const neighborRow = row + x;
-      const neighborCol = col + y;
-      if (neighborRow >= 0 && neighborRow < rows && neighborCol >= 0 && neighborCol < cols) {
-        count += grid[neighborRow][neighborCol];
-      }
-    }
-  }
-  return count;
-};
-
-const determineNextCellState = (currentState, aliveNeighbors) => {
-  if (currentState) {
-    return aliveNeighbors === 2 || aliveNeighbors === 3;
-  }
-  return aliveNeighbors === 3;
-};
-
 /**
  * Calculate the next generation of cells based on Conway's Game of Life rules
  * @param {Array<Array<number>>} currentGrid - Current state of the grid
@@ -68,8 +46,6 @@ export const calculateNextGenerationGrid = (currentGrid, rows, cols) => {
 
   for (let i = 0; i < rows; i++) {
     for (let j = 0; j < cols; j++) {
-      const aliveNeighbors = countAliveNeighbors(currentGrid, i, j, rows, cols);
-      nextGrid[i][j] = determineNextCellState(currentGrid[i][j], aliveNeighbors) ? 1 : 0;
       const aliveNeighbors = countAliveNeighbors(currentGrid, i, j, rows, cols);
       nextGrid[i][j] = determineNextCellState(currentGrid[i][j], aliveNeighbors) ? 1 : 0;
     }
@@ -97,7 +73,7 @@ const determineCellVisualizationState = (currentState, aliveNeighbors) => {
  * @param {Array<Array<number>>} currentGrid - Current state of the grid
  * @param {number} rows - Number of rows
  * @param {number} cols - Number of columns
- * @returns {Array<Array<string>>} - Grid with cell states ('die', 'survive', 'born', or '')
+ * @returns {Array<Array<string>>} - Grid with cell states ('die', 'born', or '')
  */
 export const calculateCellStates = (currentGrid, rows, cols) => {
   const stateGrid = Array.from({ length: rows }, () => Array(cols).fill(''));

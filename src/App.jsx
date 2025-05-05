@@ -21,6 +21,7 @@ const App = () => {
     visualizationState,
     cellStates,
     previewEnabled,
+    colors,
     createGrid,
     toggleCell,
     nextGeneration,
@@ -32,6 +33,7 @@ const App = () => {
     loadConfig,
     updateInterval,
     togglePreview,
+    updateColors,
   } = useGameOfLife({
     onStabilize: () => setStabilizedModalOpen(true),
   });
@@ -75,6 +77,7 @@ const App = () => {
             interval={interval}
             visualizationState={visualizationState}
             previewEnabled={previewEnabled}
+            colors={colors}
             onGenerate={createGrid}
             onStart={startSimulation}
             onStop={stopSimulation}
@@ -85,6 +88,7 @@ const App = () => {
             onUpdateInterval={updateInterval}
             onPreviewNext={previewNextGeneration}
             onTogglePreview={togglePreview}
+            onUpdateColors={updateColors}
           />
 
           <div className="pb-4 overflow-auto">
@@ -94,6 +98,7 @@ const App = () => {
               cellSize={Math.max(6, Math.min(15, 600 / Math.max(rows, cols)))}
               visualizationState={visualizationState}
               cellStates={cellStates}
+              colors={colors}
             />
           </div>
 

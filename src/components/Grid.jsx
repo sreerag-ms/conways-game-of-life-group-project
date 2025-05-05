@@ -5,7 +5,8 @@ const Grid = ({
   onCellClick, 
   cellSize = 15, 
   visualizationState = 'current',
-  cellStates = []
+  cellStates = [],
+  colors = {},
 }) => {
   const [responsiveCellSize, setResponsiveCellSize] = useState(cellSize);
 
@@ -37,29 +38,35 @@ const Grid = ({
       const state = cellStates[rowIndex][colIndex];
       switch (state) {
         case 'die':
-          return 'bg-red-400';
+          return colors.die ? { backgroundColor: colors.die } : 'bg-red-400';
         case 'born':
-          return 'bg-blue-400';
+          return colors.born ? { backgroundColor: colors.born } : 'bg-blue-400';
         default:
           // For stable cells (empty state), show their current state without preview color
-          return isAlive ? 'bg-gray-400' : 'bg-white';
+          return isAlive 
+            ? colors.alive ? { backgroundColor: colors.alive } : 'bg-gray-400'
+            : colors.dead ? { backgroundColor: colors.dead } : 'bg-white';
       }
     }
     
-    return isAlive ? 'bg-gray-400' : 'bg-white';
-  }, [visualizationState, cellStates]);
+    return isAlive 
+      ? colors.alive ? { backgroundColor: colors.alive } : 'bg-gray-400'
+      : colors.dead ? { backgroundColor: colors.dead } : 'bg-white';
+  }, [visualizationState, cellStates, colors]);
 
   const renderCell = useCallback((value, rowIndex, colIndex) => {
     const isAlive = value === 1;
-    const cellColor = getCellColor(isAlive, rowIndex, colIndex);
+    const cellStyle = getCellColor(isAlive, rowIndex, colIndex);
+    const className = typeof cellStyle === 'string' ? cellStyle : '';
 
     return (
       <div
         key={`cell-${rowIndex}-${colIndex}`}
-        className={`border border-gray-300 transition-colors duration-150 ${cellColor} hover:bg-gray-200 cursor-pointer`}
+        className={`border border-gray-300 transition-colors duration-150 hover:bg-gray-200 cursor-pointer ${className}`}
         style={{
           width: `${responsiveCellSize}px`,
           height: `${responsiveCellSize}px`,
+          ...(typeof cellStyle === 'object' ? cellStyle : {}),
         }}
         onClick={() => onCellClick(rowIndex, colIndex)}
       />
