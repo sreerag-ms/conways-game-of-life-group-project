@@ -1,12 +1,12 @@
 import {
   BgColorsOutlined,
   ClearOutlined,
+  DownloadOutlined,
+  LineChartOutlined,
   PauseCircleOutlined,
   PlayCircleOutlined,
   SettingOutlined,
   StepForwardOutlined,
-  DownloadOutlined,
-  LineChartOutlined,
 } from '@ant-design/icons';
 import { Button, Card, ColorPicker, Popover, Slider, Switch, Tooltip } from 'antd';
 import PropTypes from 'prop-types';
@@ -79,7 +79,7 @@ const SimulationControls = ({
   );
 
   return (
-    <div className="sticky top-0 z-50 w-full mb-6">
+    <div className="z-50 w-full mb-6">
       <Card title="" className="w-full shadow-md">
         <div className="flex flex-col gap-4 md:flex-row">
           <div className="flex items-center justify-between w-full md:w-1/2">

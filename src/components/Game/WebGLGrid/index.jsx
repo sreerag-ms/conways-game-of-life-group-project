@@ -452,7 +452,7 @@ const WebGLGrid = ({ cellSize = 15 }) => {
 
   return (
     <div className="flex flex-col items-center w-full rounded-lg" ref={containerRef}>
-      <div className="flex items-center justify-center w-full max-h-screen overflow-auto border border-gray-500 rounded-lg ">
+      <div className="flex items-center justify-center w-full overflow-auto border border-gray-500 rounded-lg max-h-4/5 ">
         <div
           style={{
             width: '100%',
