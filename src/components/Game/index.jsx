@@ -2,7 +2,6 @@ import { Content } from 'antd/es/layout/layout';
 import React, { useEffect, useMemo } from 'react';
 import { useGameOfLife } from '../../hooks/useGameOfLife';
 import { useGameOfLifeTheme } from '../../hooks/useGameOfLifeTheme';
-import GameSettingsCard from './Card/GameSettingsCard';
 import SimulationControls from './SimulationControls';
 import WebGLGrid from './WebGLGrid';
 
@@ -65,21 +64,7 @@ const Game = ({ setStabilizedModalOpen }) => {
 
   return (
     <Content className="p-3 md:p-6 lg:p-12 bg-gradient-to-b from-gray-50 to-gray-100">
-      <div className="flex flex-col w-full md:flex-row">
-
-        <GameSettingsCard
-          rows={rows}
-          cols={cols}
-          interval={interval}
-          isContinuous={isContinuous}
-          onGenerate={createGrid}
-          onUpdateInterval={updateInterval}
-          setContinuousGrid={setContinuousGrid}
-          onClear={clearGrid}
-        />
-
-        {controlsComponent}
-      </div>
+      {controlsComponent}
 
       <div className="pb-4 overflow-auto">
         <WebGLGrid
