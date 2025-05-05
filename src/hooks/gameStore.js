@@ -19,6 +19,8 @@ export const useGameStore = create((set, get) => ({
   isContinuous: true,
   showChanges: false,
   simulationIntervalRef: null,
+  metrics: [],
+  generation: 0,
 
   // Methods
   getNextStateSet: () => {
@@ -159,8 +161,28 @@ export const useGameStore = create((set, get) => ({
     });
   },
 
+  collectMetrics: () => {
+    const { activeCells, bornCells, dyingCells, generation, currentRules } = get();
+    const timestamp = new Date().toISOString();
+    
+    const metrics = {
+      timestamp,
+      generation,
+      populationSize: activeCells.size,
+      births: bornCells.size,
+      deaths: dyingCells.size,
+      ruleSet: currentRules,
+    };
+
+    set(state => ({
+      metrics: [...state.metrics, metrics],
+    }));
+
+    return metrics;
+  },
+
   calculateNextGeneration: (onStabilize) => {
-    const { activeCells } = get();
+    const { activeCells, generation } = get();
 
     // Store the current state before changing
     set({ previousActiveCells: new Set(activeCells) });
@@ -176,11 +198,16 @@ export const useGameStore = create((set, get) => ({
         get().stopSimulation();
         if (onStabilize) onStabilize();
       }, 0);
-
-      return; // Don't update the state to avoid rendering changes
+      return;
     }
 
-    set({ activeCells: nextActiveCells });
+    set(state => ({ 
+      activeCells: nextActiveCells,
+      generation: state.generation + 1,
+    }));
+
+    // Collect metrics after state update
+    get().collectMetrics();
   },
 
   createGrid: (rowCount, colCount) => {
@@ -208,7 +235,11 @@ export const useGameStore = create((set, get) => ({
 
   clearGrid: () => {
     get().stopSimulation();
-    set({ activeCells: new Set() });
+    set({ 
+      activeCells: new Set(),
+      generation: 0,
+      metrics: [],
+    });
   },
 
   changeRules: (ruleName) => {
@@ -365,5 +396,34 @@ export const useGameStore = create((set, get) => ({
     set({ activeCells: nextActiveCells });
 
     return { success: true };
+  },
+
+  exportData: () => {
+    const { metrics } = get();
+    
+    // Create CSV content
+    const headers = ['Timestamp', 'Generation', 'Population Size', 'Births', 'Deaths', 'Rule Set'];
+    const rows = metrics.map(m => [
+      m.timestamp,
+      m.generation,
+      m.populationSize,
+      m.births,
+      m.deaths,
+      m.ruleSet,
+    ]);
+
+    const csvContent = [
+      headers.join(','),
+      ...rows.map(row => row.join(','))
+    ].join('\n');
+
+    // Create and download the file
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = `game_of_life_metrics_${new Date().toISOString()}.csv`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   },
 }));
