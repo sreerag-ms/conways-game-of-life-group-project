@@ -24,4 +24,69 @@ export const RULES = {
     S: [2, 3],
     B: [3, 6],
   },
+  'Seeds': {
+    name: 'Seeds',
+    S: [],
+    B: [2],
+  },
+  'LwoD': {
+    name: 'Life without Death',
+    S: [0, 1, 2, 3, 4, 5, 6, 7, 8],
+    B: [3],
+  },
+  'Maze': {
+    name: 'Maze',
+    S: [1, 2, 3, 4, 5],
+    B: [3],
+  },
+  'Replicator': {
+    name: 'Replicator',
+    S: [1, 3, 5, 7],
+    B: [1, 3, 5, 7],
+  },
+  '2x2': {
+    name: '2x2',
+    S: [1, 2, 5],
+    B: [3, 6],
+  },
+  'DayAndNight': {
+    name: 'Day & Night',
+    S: [3, 4, 6, 7, 8],
+    B: [3, 6, 7, 8],
+  },
+  '34Life': {
+    name: '34 Life',
+    S: [3, 4],
+    B: [3, 4],
+  },
+  'Diamoeba': {
+    name: 'Diamoeba',
+    S: [5, 6, 7, 8],
+    B: [3, 5, 6, 7, 8],
+  },
+  'Coral': {
+    name: 'Coral',
+    S: [4, 5, 6, 7, 8],
+    B: [3],
+  },
+  'Assimilation': {
+    name: 'Assimilation',
+    S: [4, 5, 6, 7],
+    B: [3, 4, 5],
+  },
+  'Stains': {
+    name: 'Stains',
+    S: [2, 3, 5, 6, 7, 8],
+    B: [3, 6, 7, 8],
+  },
+  'Amoeba': {
+    name: 'Amoeba',
+    S: [1, 3, 5, 8],
+    B: [3, 5, 7],
+  },
+  'Move': {
+    name: 'Move',
+    S: [2, 4, 5],
+    B: [3, 6, 8],
+  },
 };

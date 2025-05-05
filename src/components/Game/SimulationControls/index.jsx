@@ -71,7 +71,7 @@ const SimulationControls = ({
   );
 
   return (
-    <div className="w-full mb-6">
+    <div className="sticky top-0 w-full mb-6">
       <Card title="" className="w-full shadow-md">
         <div className="flex flex-col gap-4 md:flex-row">
           <div className="flex items-center justify-between w-full md:w-1/2">

@@ -1,8 +1,9 @@
 import { SaveOutlined, UploadOutlined } from '@ant-design/icons';
-import { Button, Form, Input, InputNumber, message, Modal, Switch } from 'antd';
+import { Button, Form, Input, InputNumber, message, Modal, Select, Switch } from 'antd';
 import { Formik } from 'formik';
 import React, { useRef, useState } from 'react';
 import * as Yup from 'yup';
+import { RULES } from '../../hooks/constants';
 import { useGameOfLife } from '../../hooks/useGameOfLife';
 
 // Validation schema for grid settings
@@ -16,6 +17,7 @@ const gameSettingsValidationSchema = Yup.object().shape({
     .min(5, 'Minimum 5 columns')
     .max(1000, 'Maximum 1000 columns'),
   isContinuous: Yup.boolean(),
+  currentRules: Yup.string().required('Rule set is required'),
 });
 
 const FormItemWithError = ({ label, name, touched, errors, children }) => (
@@ -36,6 +38,7 @@ const SettingsModal = ({
     rows,
     cols,
     isContinuous,
+    currentRules,
     createGrid,
     setContinuousGrid,
     clearGrid,
@@ -52,6 +55,7 @@ const SettingsModal = ({
     rows,
     cols,
     isContinuous,
+    currentRules,
   };
 
   // Form submission handler
@@ -59,6 +63,7 @@ const SettingsModal = ({
     // Update settings
     createGrid(values.rows, values.cols);
     setContinuousGrid(values.isContinuous);
+    changeRules(values.currentRules);
 
     // Close the modal
     onClose();
@@ -104,8 +109,8 @@ const SettingsModal = ({
             setFieldValue,
           }) => (
             <Form layout="vertical" onFinish={handleSubmit}>
-              <div className='flex items-center justify-between mt-4 mb-4'>
-                <FormItemWithError label="Rows" name="rows" touched={touched} errors={errors}>
+              <div className='flex flex-wrap items-start justify-between gap-4 mt-4 mb-4'>
+                <FormItemWithError label="Rows" name="rows" touched={touched} errors={errors} className="w-1/3">
                   <InputNumber
                     min={5}
                     max={1000}
@@ -115,7 +120,7 @@ const SettingsModal = ({
                   />
                 </FormItemWithError>
 
-                <FormItemWithError label="Columns" name="cols" touched={touched} errors={errors}>
+                <FormItemWithError label="Columns" name="cols" touched={touched} errors={errors} className="w-1/3">
                   <InputNumber
                     min={5}
                     max={1000}
@@ -125,7 +130,7 @@ const SettingsModal = ({
                   />
                 </FormItemWithError>
 
-                <Form.Item label="Continuous Grid">
+                <Form.Item label="Continuous Grid" className="w-1/3">
                   <div className="flex items-center">
                     <Switch
                       checked={values.isContinuous}
@@ -137,6 +142,22 @@ const SettingsModal = ({
                   </div>
                 </Form.Item>
 
+                <FormItemWithError label="Rule Set" name="currentRules" touched={touched} errors={errors} className="w-full">
+                  <Select
+                    value={values.currentRules}
+                    onChange={(value) => setFieldValue('currentRules', value)}
+                    className="w-full"
+                  >
+                    {Object.keys(RULES).map(ruleKey => (
+                      <Select.Option key={ruleKey} value={ruleKey}>
+                        {RULES[ruleKey].name} ({ruleKey}) - S: [{RULES[ruleKey].S.join(',')}], B: [{RULES[ruleKey].B.join(',')}]
+                      </Select.Option>
+                    ))}
+                  </Select>
+                  <div className="mt-1 text-xs text-gray-500">
+                    S = Survival conditions, B = Birth conditions
+                  </div>
+                </FormItemWithError>
               </div>
               <div className="flex justify-between mt-6">
                 <Button
