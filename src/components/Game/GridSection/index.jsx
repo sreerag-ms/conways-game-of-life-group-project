@@ -7,11 +7,13 @@ import ToolBar from './ToolBar';
 const GridSection = () => (
   <GridWrapper>
     <div className="flex flex-col items-center w-full md:flex-row md:items-start md:space-x-4">
-      <div className="flex-grow mb-4 overflow-auto md:mb-0">
+      <div className="flex flex-col flex-grow mb-4 overflow-auto md:mb-0">
+        <div className="mb-2">
+          <ToolBar />
+        </div>
         <WebGLGrid />
       </div>
       <div className="flex flex-col w-full gap-4 md:w-80">
-        <ToolBar />
         <Patterns />
       </div>
     </div>
