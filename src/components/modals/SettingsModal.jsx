@@ -1,10 +1,37 @@
-import { SaveOutlined, UploadOutlined } from '@ant-design/icons';
-import { Button, Form, Input, InputNumber, message, Modal, Select, Switch } from 'antd';
+import { InboxOutlined } from '@ant-design/icons';
+import { Button, Form, InputNumber, message, Modal, Select, Switch, Upload } from 'antd';
 import { Formik } from 'formik';
-import React, { useRef, useState } from 'react';
+import PropTypes from 'prop-types';
+import React from 'react';
 import * as Yup from 'yup';
 import { RULES } from '../../hooks/constants';
 import { useGameOfLife } from '../../hooks/useGameOfLife';
+import { imageToPattern } from '../../utils/patterns';
+
+// Convert pattern cells to config format
+const createConfigFromPattern = (pattern, rows, cols, rules) => ({
+  cells: pattern.cells.flatMap((row, i) => 
+    row.map((cell, j) => cell === 1 ? `${i},${j}` : null)
+  ).filter(Boolean),
+  rows,
+  cols,
+  rules,
+});
+
+// Process uploaded image
+const processUploadedFile = (file, cols, rows, rules, onComplete) => {
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    const img = new Image();
+    img.onload = () => {
+      const pattern = imageToPattern(img, cols, rows);
+      const configData = createConfigFromPattern(pattern, rows, cols, rules);
+      onComplete(configData);
+    };
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
+};
 
 // Validation schema for grid settings
 const gameSettingsValidationSchema = Yup.object().shape({
@@ -30,6 +57,14 @@ const FormItemWithError = ({ label, name, touched, errors, children }) => (
   </Form.Item>
 );
 
+FormItemWithError.propTypes = {
+  label: PropTypes.string.isRequired,
+  name: PropTypes.string.isRequired,
+  touched: PropTypes.object.isRequired,
+  errors: PropTypes.object.isRequired,
+  children: PropTypes.node.isRequired,
+};
+
 const SettingsModal = ({
   isVisible,
   onClose,
@@ -42,13 +77,9 @@ const SettingsModal = ({
     createGrid,
     setContinuousGrid,
     clearGrid,
-    saveConfig,
     loadConfig,
     changeRules,
   } = useGameOfLife();
-
-  const [configText, setConfigText] = useState('');
-  const textAreaRef = useRef(null);
 
   // Form initialization
   const initialValues = {
@@ -70,14 +101,8 @@ const SettingsModal = ({
   };
 
   // Pattern handlers
-  const handleSaveConfig = () => {
-    const config = saveConfig();
-    setConfigText(config);
-    message.success('Current grid saved to pattern editor');
-  };
-
-  const handleLoadConfig = () => {
-    const result = loadConfig(configText);
+  const handleLoadConfig = (configData) => {
+    const result = loadConfig(configData);
     if (result.success) {
       message.success('Pattern loaded successfully');
       onClose();
@@ -178,37 +203,36 @@ const SettingsModal = ({
         </Formik>
 
         <div className="pt-6 border-t">
-          <h3 className="mb-3 text-base font-medium">Pattern Editor</h3>
+          <h3 className="mb-3 text-base font-medium">Image Pattern Editor</h3>
           <p className="mb-3 text-sm text-gray-600">
-            Use 0's and 1's to define your pattern. Each row must match the grid width.
+            Upload an image to convert it into a game pattern. Dark pixels will become live cells.
           </p>
-          <Input.TextArea
-            ref={textAreaRef}
-            value={configText}
-            onChange={(e) => setConfigText(e.target.value)}
-            rows={6}
-            placeholder="Initial configuration: use 0/1 rows"
-            className="mb-4 font-mono"
-          />
-          <div className="flex justify-end gap-2 mt-2">
-            <Button
-              icon={<SaveOutlined />}
-              onClick={handleSaveConfig}
+          <div className="flex flex-col gap-4">
+            <Upload.Dragger
+              accept="image/*"
+              showUploadList={false}
+              customRequest={({ file }) => {
+                processUploadedFile(file, cols, rows, currentRules, handleLoadConfig);
+              }}
             >
-              Save Current Grid
-            </Button>
-            <Button
-              type="primary"
-              icon={<UploadOutlined />}
-              onClick={handleLoadConfig}
-            >
-              Load Pattern
-            </Button>
+              <p className="ant-upload-drag-icon">
+                <InboxOutlined />
+              </p>
+              <p className="ant-upload-text">Click or drag an image file to this area</p>
+              <p className="ant-upload-hint">
+                The image will be scaled to fit the current grid size ({cols}x{rows})
+              </p>
+            </Upload.Dragger>
           </div>
         </div>
       </div>
     </Modal>
   );
+};
+
+SettingsModal.propTypes = {
+  isVisible: PropTypes.bool.isRequired,
+  onClose: PropTypes.func.isRequired,
 };
 
 export default SettingsModal;

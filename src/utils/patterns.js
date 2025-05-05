@@ -73,3 +73,49 @@ export const createPatternDragImage = (cells) => {
   // Create a data URL from the blob
   return URL.createObjectURL(blob);
 };
+
+/**
+ * Convert an image to a binary grid pattern
+ *
+ * @param {HTMLImageElement} imageData - Image element to process
+ * @param {number} targetWidth - Width of the resulting pattern
+ * @param {number} targetHeight - Height of the resulting pattern
+ * @returns {Object} - Object containing cells, width, and height
+ */
+export const imageToPattern = (imageData, targetWidth, targetHeight) => {
+  const canvas = document.createElement('canvas');
+  const ctx = canvas.getContext('2d');
+  
+  // Set canvas size to match target dimensions
+  canvas.width = targetWidth;
+  canvas.height = targetHeight;
+  
+  // Draw and scale the image
+  ctx.drawImage(imageData, 0, 0, targetWidth, targetHeight);
+  
+  // Get pixel data
+  const imgData = ctx.getImageData(0, 0, targetWidth, targetHeight);
+  const cells = Array(targetHeight).fill().map(() => Array(targetWidth).fill(0));
+  
+  // Convert to binary based on brightness
+  for (let y = 0; y < targetHeight; y++) {
+    for (let x = 0; x < targetWidth; x++) {
+      const idx = (y * targetWidth + x) * 4;
+      const r = imgData.data[idx];
+      const g = imgData.data[idx + 1];
+      const b = imgData.data[idx + 2];
+      
+      // Calculate brightness (0-255)
+      const brightness = (r + g + b) / 3;
+      
+      // Convert to binary (1 for dark pixels, 0 for light)
+      cells[y][x] = brightness < 128 ? 1 : 0;
+    }
+  }
+  
+  return {
+    cells,
+    width: targetWidth,
+    height: targetHeight
+  };
+};
