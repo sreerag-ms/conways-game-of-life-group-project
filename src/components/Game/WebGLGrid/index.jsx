@@ -46,26 +46,34 @@ const WebGLGrid = ({ cellSize = 15, setStabilizedModalOpen }) => {
   const [hoveredCell, setHoveredCell] = useState({ row: -1, col: -1 });
 
   useEffect(() => {
-    createGrid(150, 200);
+    createGrid(50, 50);
   }, [createGrid]);
 
   useEffect(() => {
     const calculateCellSize = () => {
-
-      const containerWidth = 600;
-      const containerHeight = 450;
+      // Use the same dimensions as the container in the render method
+      const containerWidth = 800;
+      const containerHeight = 500;
 
       const maxCellWidth = Math.floor(containerWidth / cols);
       const maxCellHeight = Math.floor(containerHeight / rows);
 
       let optimalSize = Math.min(maxCellWidth, maxCellHeight);
 
-      if (rows <= 20 && cols <= 20) {
+      if (rows <= 10 && cols <= 10) {
+        optimalSize = Math.min(50, optimalSize);
+      } else if (rows <= 20 && cols <= 20) {
+        optimalSize = Math.min(35, optimalSize);
+      } else if (rows <= 30 && cols <= 30) {
         optimalSize = Math.min(30, optimalSize);
       } else if (rows <= 50 && cols <= 50) {
-        optimalSize = Math.min(20, optimalSize);
+        optimalSize = Math.min(25, optimalSize);
+      } else if (rows <= 75 && cols <= 75) {
+        optimalSize = Math.min(15, optimalSize);
       } else if (rows <= 100 && cols <= 100) {
-        optimalSize = Math.min(10, optimalSize);
+        optimalSize = Math.min(12, optimalSize);
+      } else if (rows <= 150 && cols <= 150) {
+        optimalSize = Math.min(8, optimalSize);
       }
 
       return Math.max(4, optimalSize);
@@ -449,6 +457,14 @@ const WebGLGrid = ({ cellSize = 15, setStabilizedModalOpen }) => {
     };
   }, [handleMouseMove, handleMouseDown, handleMouseUp, handleMouseLeave, handleDragOver, handleDrop]);
 
+  // Calculate if grid should be centered (add this before the return statement)
+  const gridWidth = cols * responsiveCellSize;
+  const gridHeight = rows * responsiveCellSize;
+  const containerWidth = 800;
+  const containerHeight = 500;
+  const centerX = gridWidth < containerWidth ? (containerWidth - gridWidth) / 2 : 0;
+  const centerY = gridHeight < containerHeight ? (containerHeight - gridHeight) / 2 : 0;
+
   return (
     <div className="flex flex-col items-center w-full rounded-lg" ref={containerRef}>
       <div className="relative flex items-center justify-center w-full overflow-hidden border-gray-300 rounded-lg"
@@ -470,6 +486,9 @@ const WebGLGrid = ({ cellSize = 15, setStabilizedModalOpen }) => {
             style={{
               transform: `scale(${zoom}) translate(${panOffset.x / zoom}px, ${panOffset.y / zoom}px)`,
               transformOrigin: '0 0',
+              position: 'absolute',
+              left: `${centerX}px`,
+              top: `${centerY}px`,
             }}
           >
             <canvas
