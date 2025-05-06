@@ -22,6 +22,7 @@ export const useSimulationControls = ({ onStabilize } = {}) => {
     changeRules,
     createGrid,
     setContinuousGrid,
+    currentRules,
   ] = useGameStore(
     state => [
       state.isRunning,
@@ -40,6 +41,7 @@ export const useSimulationControls = ({ onStabilize } = {}) => {
       state.changeRules,
       state.createGrid,
       state.setContinuousGrid,
+      state.currentRules,
     ],
     shallow,
   );
@@ -61,5 +63,6 @@ export const useSimulationControls = ({ onStabilize } = {}) => {
     changeRules,
     createGrid,
     setContinuousGrid,
+    currentRules,
   };
 };

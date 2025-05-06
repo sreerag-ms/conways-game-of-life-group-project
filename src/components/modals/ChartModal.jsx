@@ -1,4 +1,5 @@
-import { Modal } from 'antd';
+import { DownloadOutlined } from '@ant-design/icons';
+import { Button, Modal } from 'antd';
 import {
   CategoryScale,
   Chart as ChartJS,
@@ -13,8 +14,8 @@ import {
 import PropTypes from 'prop-types';
 import React, { useEffect, useState } from 'react';
 import { Line } from 'react-chartjs-2';
+import { useSimulationControls } from '../../hooks/useSimulationControls';
 
-// Register ChartJS components
 ChartJS.register(
   CategoryScale,
   LinearScale,
@@ -32,6 +33,7 @@ const ChartModal = ({ isVisible, onClose, getMetrics }) => {
     labels: [],
     datasets: [],
   });
+  const { exportData } = useSimulationControls();
 
   useEffect(() => {
     if (getMetrics && isVisible){
@@ -148,7 +150,9 @@ const ChartModal = ({ isVisible, onClose, getMetrics }) => {
 
   return (
     <Modal
-      title="Population Metrics"
+      title={
+        <span>Population Metrics</span>
+      }
       open={isVisible}
       onCancel={onClose}
       width={800}
@@ -166,6 +170,18 @@ const ChartModal = ({ isVisible, onClose, getMetrics }) => {
             No data available. Run the simulation to collect metrics.
           </div>
         )}
+      </div>
+      <div className="flex items-center justify-end w-full gap-5">
+        <Button
+          className="rounded-lg"
+          type="default"
+          icon={<DownloadOutlined />}
+          size="small"
+          onClick={exportData}
+        >
+            Download CSV
+        </Button>
+
       </div>
     </Modal>
   );

@@ -1,14 +1,12 @@
 import { create } from 'zustand';
 
 export const useCanvasStore = create((set) => ({
-  // Canvas state
   zoom: 1,
   panOffset: { x: 0, y: 0 },
   activeTool: 'mouse', // 'mouse', 'hand'
   isDragging: false,
   dragStart: { x: 0, y: 0 },
 
-  // Methods
   setZoom: (newZoom) => set({ zoom: Math.max(0.25, Math.min(5, newZoom)) }),
   zoomIn: () => set((state) => ({ zoom: Math.min(5, state.zoom * 1.2) })),
   zoomOut: () => set((state) => ({ zoom: Math.max(0.25, state.zoom / 1.2) })),

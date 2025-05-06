@@ -5,7 +5,7 @@ import { useGameOfLifeTheme } from '../../../hooks/useGameOfLifeTheme';
 import { FRAGMENT_SHADER_SOURCE, VERTEX_SHADER_SOURCE } from './constants';
 import { hexToRgb } from './utils';
 
-const WebGLGrid = ({ cellSize = 15 }) => {
+const WebGLGrid = ({ cellSize = 15, setStabilizedModalOpen }) => {
 
   const {
     activeCells,
@@ -17,7 +17,17 @@ const WebGLGrid = ({ cellSize = 15 }) => {
     toggleCell,
     placePattern,
     createGrid,
+    generation,
+    stabilized,
   } = useGameOfLife();
+
+  useEffect(() => {
+    console.log('Stabilized:', stabilized);
+
+    if (stabilized) {
+      setStabilizedModalOpen(true);
+    }
+  }, [stabilized, setStabilizedModalOpen]);
 
   const { theme } = useGameOfLifeTheme();
 
@@ -44,7 +54,7 @@ const WebGLGrid = ({ cellSize = 15 }) => {
   const [hoveredCell, setHoveredCell] = useState({ row: -1, col: -1 });
 
   useEffect(() => {
-    createGrid(100, 100);
+    createGrid(150, 200);
   }, [createGrid]);
 
   useEffect(() => {
@@ -228,17 +238,7 @@ const WebGLGrid = ({ cellSize = 15 }) => {
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
-    gl.texImage2D(
-      gl.TEXTURE_2D,
-      0,
-      gl.RGBA,
-      width,
-      height,
-      0,
-      gl.RGBA,
-      gl.UNSIGNED_BYTE,
-      cellsData,
-    );
+    gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,width,height,0,gl.RGBA,gl.UNSIGNED_BYTE,cellsData);
 
     gl.useProgram(program.program);
 
@@ -447,11 +447,12 @@ const WebGLGrid = ({ cellSize = 15 }) => {
 
   return (
     <div className="flex flex-col items-center w-full rounded-lg" ref={containerRef}>
-      <div className="flex items-center justify-center w-full overflow-auto border border-gray-500 rounded-lg max-h-4/5 ">
+      <div className="relative flex items-center justify-center overflow-auto border-gray-300 rounded-lg w-fit max-h-4/5 ">
         <div
+          className='bg-gray-500'
           style={{
-            width: '100%',
-            height: '100%',
+            width: `${cols * responsiveCellSize}px`,
+            height: '70vh',
             overflow: 'auto',
             position: 'relative',
           }}
@@ -472,6 +473,19 @@ const WebGLGrid = ({ cellSize = 15 }) => {
               }}
             />
           </div>
+        </div>
+        <div
+          className="absolute px-3 py-1 font-semibold text-black rounded bg-slate-100 bg-opacity-30"
+          style={{
+            bottom: 5,
+            right: 5,
+            fontSize: '0.7rem',
+            fontWeight: 'normal',
+            zIndex: 10,
+            backgroundColor: 'rgba(250, 250, 250, 0.6)',
+          }}
+        >
+              Generation: {generation}
         </div>
       </div>
     </div>

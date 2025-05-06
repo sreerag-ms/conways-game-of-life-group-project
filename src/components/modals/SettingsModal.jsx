@@ -1,4 +1,4 @@
-import { Button, Form, InputNumber, message, Modal, Select, Switch } from 'antd';
+import { Button, Form, InputNumber, Modal, Select, Switch } from 'antd';
 import { Formik } from 'formik';
 import PropTypes from 'prop-types';
 import React from 'react';
@@ -35,16 +35,11 @@ const SettingsModal = ({
     clearGrid,
     loadConfig,
     changeRules,
+    isContinuous,
+    currentRules,
   } = useSimulationControls();
 
   const { rows, cols } = getGridDimensions();
-
-  // Form initialization
-  const [isContinuous, currentRules] = [
-    // These are not in getGridDimensions, so fetch from store directly
-    useSimulationControls().isContinuous,
-    useSimulationControls().currentRules,
-  ];
 
   const initialValues = {
     rows,
@@ -59,17 +54,6 @@ const SettingsModal = ({
     setContinuousGrid(values.isContinuous);
     changeRules(values.currentRules);
     onClose();
-  };
-
-  // Pattern handlers
-  const handleLoadConfig = (configData) => {
-    const result = loadConfig(configData);
-    if (result.success) {
-      message.success('Pattern loaded successfully');
-      onClose();
-    } else {
-      message.error(result.message);
-    }
   };
 
   return (

@@ -40,6 +40,7 @@ export const useGameOfLife = ({ onStabilize } = {}) => {
     exportData,
     simulationIntervalRef,
     updateCellChanges,
+    stabilized,
   } = useGameStore(
     (state) => ({
       getGridArray: state.getGridArray,
@@ -72,6 +73,7 @@ export const useGameOfLife = ({ onStabilize } = {}) => {
       exportData: state.exportData,
       simulationIntervalRef: state.simulationIntervalRef,
       updateCellChanges: state.updateCellChanges,
+      stabilized: state.stabilized,
     }),
     shallow,
   );
@@ -117,5 +119,6 @@ export const useGameOfLife = ({ onStabilize } = {}) => {
     showChanges,
     placePattern,
     exportData,
+    stabilized,
   };
 };

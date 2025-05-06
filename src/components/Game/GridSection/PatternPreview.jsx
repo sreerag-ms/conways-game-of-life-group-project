@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
+import { PRIMARY_COLOR } from '../../../constants';
 
-const PatternPreview = ({ cells, containerWidth = 64, containerHeight = 64, aliveColor = '#4682B4', deadColor = 'white' }) => {
+const PatternPreview = ({ cells, containerWidth = 64, containerHeight = 64, aliveColor = PRIMARY_COLOR, deadColor = 'white' }) => {
   const containerRef = useRef(null);
   const [cellSize, setCellSize] = useState(0.0);
 
@@ -26,7 +27,7 @@ const PatternPreview = ({ cells, containerWidth = 64, containerHeight = 64, aliv
   return (
     <div
       ref={containerRef}
-      className="flex items-center justify-center overflow-hidden border border-gray-200 pattern-preview"
+      className="flex items-center justify-center overflow-hidden pattern-preview"
       style={{
         width: `${containerWidth}px`,
         height: `${containerHeight}px`,
@@ -39,8 +40,8 @@ const PatternPreview = ({ cells, containerWidth = 64, containerHeight = 64, aliv
             display: 'grid',
             gridTemplateColumns: `repeat(${width}, ${cellSize}px)`,
             gridTemplateRows: `repeat(${height}, ${cellSize}px)`,
-            gap: '1px',
-            padding: '2px',
+            gap: '0px',
+            padding: '0px',
             backgroundColor: '#f0f0f0',
           }}
         >

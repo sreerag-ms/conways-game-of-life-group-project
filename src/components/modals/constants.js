@@ -15,7 +15,6 @@ export const gameSettingsValidationSchema = Yup.object().shape({
   currentRules: Yup.string().required('Rule set is required'),
 });
 
-// Convert pattern cells to config format
 export const createConfigFromPattern = (pattern, rows, cols, rules) => ({
   cells: pattern.cells.flatMap((row, i) =>
     row.map((cell, j) => cell === 1 ? `${i},${j}` : null),
@@ -25,7 +24,6 @@ export const createConfigFromPattern = (pattern, rows, cols, rules) => ({
   rules,
 });
 
-// Process uploaded image
 export const processUploadedFile = (file, cols, rows, rules, onComplete) => {
   const reader = new FileReader();
   reader.onload = (e) => {

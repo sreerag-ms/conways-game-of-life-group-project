@@ -20,6 +20,7 @@ export const useGameStore = create((set, get) => ({
   simulationIntervalRef: null,
   metrics: [],
   generation: 0,
+  stabilized: false,
 
   // Methods
   getNextStateSet: () => {
@@ -45,11 +46,9 @@ export const useGameStore = create((set, get) => ({
             newRow = (row + i + rows) % rows;
             newCol = (col + j + cols) % cols;
           } else {
-            // No wrapping (non-continuous)
             newRow = row + i;
             newCol = col + j;
 
-            // Skip if outside grid boundaries
             if (newRow < 0 || newRow >= rows || newCol < 0 || newCol >= cols) {
               continue;
             }
@@ -191,7 +190,7 @@ export const useGameStore = create((set, get) => ({
     // Check if the grid has stabilized
     const hasStabilized = get().areGridsEqual(activeCells, nextActiveCells);
     if (hasStabilized) {
-      console.log('Grid has stabilized');
+      set({ stabilized: true });
       setTimeout(() => {
         get().stopSimulation();
         if (onStabilize) onStabilize();
@@ -203,6 +202,7 @@ export const useGameStore = create((set, get) => ({
     set(state => ({
       activeCells: nextActiveCells,
       generation: state.generation + 1,
+      stabilized: false,
     }));
 
     // Collect metrics after state update
@@ -215,6 +215,7 @@ export const useGameStore = create((set, get) => ({
       rows: rowCount,
       cols: colCount,
       activeCells: new Set(),
+      stabilized: false,
     });
   },
 
@@ -229,7 +230,10 @@ export const useGameStore = create((set, get) => ({
       nextActiveCells.add(coordStr);
     }
 
-    set({ activeCells: nextActiveCells });
+    set({
+      activeCells: nextActiveCells,
+      stabilized: false,
+    });
   },
 
   clearGrid: () => {
@@ -238,6 +242,7 @@ export const useGameStore = create((set, get) => ({
       activeCells: new Set(),
       generation: 0,
       metrics: [],
+      stabilized: false,
     });
   },
 
@@ -279,6 +284,7 @@ export const useGameStore = create((set, get) => ({
         rows: config.rows || rows,
         cols: config.cols || cols,
         activeCells: new Set(config.cells),
+        stabilized: false,
       });
 
       if (config.rules && RULES[config.rules]) {
@@ -308,6 +314,7 @@ export const useGameStore = create((set, get) => ({
       set({
         simulationIntervalRef: intervalId,
         isRunning: true,
+        stabilized: false,
       });
     }
   },
@@ -392,7 +399,10 @@ export const useGameStore = create((set, get) => ({
       }
     }
 
-    set({ activeCells: nextActiveCells });
+    set({
+      activeCells: nextActiveCells,
+      stabilized: false,
+    });
 
     return { success: true };
   },
