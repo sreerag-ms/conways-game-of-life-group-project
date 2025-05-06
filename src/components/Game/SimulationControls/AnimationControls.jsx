@@ -1,3 +1,4 @@
+// animation controls for simulation speed and next generation preview
 import { Slider, Switch } from 'antd';
 import React, { useState } from 'react';
 import { useSimulationControls } from '../../../hooks/useSimulationControls';

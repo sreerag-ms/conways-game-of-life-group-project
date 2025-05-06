@@ -98,7 +98,7 @@ const SettingsModal = ({
               <FormItemWithError label="Rows" name="rows" touched={touched} errors={errors}>
                 <InputNumber
                   min={5}
-                  max={1000}
+                  max={5000}
                   value={values.rows}
                   onChange={(value) => setFieldValue('rows', value)}
                   className="w-full"
@@ -109,7 +109,7 @@ const SettingsModal = ({
               <FormItemWithError label="Columns" name="cols" touched={touched} errors={errors}>
                 <InputNumber
                   min={5}
-                  max={1000}
+                  max={5000}
                   value={values.cols}
                   onChange={(value) => setFieldValue('cols', value)}
                   className="w-full"
@@ -142,7 +142,7 @@ const SettingsModal = ({
               >
                 {Object.keys(RULES).map(ruleKey => (
                   <Select.Option key={ruleKey} value={ruleKey}>
-                    {RULES[ruleKey].name} ({ruleKey}) - S: [{RULES[ruleKey].S.join(',')}], B: [{RULES[ruleKey].B.join(',')}]
+                    {RULES[ruleKey].name} - S: [{RULES[ruleKey].S.join(',')}], B: [{RULES[ruleKey].B.join(',')}]
                   </Select.Option>
                 ))}
               </Select>

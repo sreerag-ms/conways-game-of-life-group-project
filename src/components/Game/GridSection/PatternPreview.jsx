@@ -10,7 +10,7 @@ const PatternPreview = ({ cells, containerWidth = 64, containerHeight = 64, aliv
 
   useEffect(() => {
     if (containerRef.current) {
-      const maxCellWidth = Math.floor((containerWidth - 4) / width);  // 4px for padding
+      const maxCellWidth = Math.floor((containerWidth - 4) / width);
       const maxCellHeight = Math.floor((containerHeight - 4) / height);
 
       const optimalCellSize = (Math.min(maxCellWidth, maxCellHeight));

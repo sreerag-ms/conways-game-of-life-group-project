@@ -1,9 +1,9 @@
 import { useThemeStore } from './themeStore';
 
+// TODO: Use the store directly, prevent the use if this hook
 export const useGameOfLifeTheme = () => {
   const store = useThemeStore();
 
-  // Return the same API as before
   return {
     theme: store.theme,
     updateColor: store.updateColor,
