@@ -175,4 +175,4 @@ SimulationControls.propTypes = {
   }).isRequired,
 };
 
-export default React.memo(SimulationControls);
+export default SimulationControls;

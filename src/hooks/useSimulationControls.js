@@ -1,5 +1,5 @@
 import { useRef } from 'react';
-import { shallow } from 'zustand/shallow';
+import { useShallow } from 'zustand/react/shallow';
 import { useGameStore } from './gameStore';
 
 export const useSimulationControls = ({ onStabilize } = {}) => {
@@ -23,7 +23,7 @@ export const useSimulationControls = ({ onStabilize } = {}) => {
     createGrid,
     setContinuousGrid,
     currentRules,
-  ] = useGameStore(
+  ] = useGameStore(useShallow(
     state => [
       state.isRunning,
       state.startSimulation,
@@ -42,8 +42,7 @@ export const useSimulationControls = ({ onStabilize } = {}) => {
       state.createGrid,
       state.setContinuousGrid,
       state.currentRules,
-    ],
-    shallow,
+    ]),
   );
 
   return {

@@ -21,14 +21,6 @@ const WebGLGrid = ({ cellSize = 15, setStabilizedModalOpen }) => {
     stabilized,
   } = useGameOfLife();
 
-  useEffect(() => {
-    console.log('Stabilized:', stabilized);
-
-    if (stabilized) {
-      setStabilizedModalOpen(true);
-    }
-  }, [stabilized, setStabilizedModalOpen]);
-
   const { theme } = useGameOfLifeTheme();
 
   const {

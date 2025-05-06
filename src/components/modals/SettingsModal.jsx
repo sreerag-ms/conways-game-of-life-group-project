@@ -2,8 +2,9 @@ import { Button, Form, InputNumber, Modal, Select, Switch } from 'antd';
 import { Formik } from 'formik';
 import PropTypes from 'prop-types';
 import React from 'react';
+import { useShallow } from 'zustand/react/shallow';
 import { RULES } from '../../hooks/constants';
-import { useSimulationControls } from '../../hooks/useSimulationControls';
+import { useGameStore } from '../../hooks/gameStore';
 import { gameSettingsValidationSchema } from './constants';
 
 const FormItemWithError = ({ label, name, touched, errors, children }) => (
@@ -28,16 +29,25 @@ const SettingsModal = ({
   isVisible,
   onClose,
 }) => {
+
   const {
+    isContinuous,
     getGridDimensions,
     createGrid,
     setContinuousGrid,
     clearGrid,
-    loadConfig,
     changeRules,
-    isContinuous,
     currentRules,
-  } = useSimulationControls();
+  } = useGameStore(
+    useShallow((state) => ({
+      isContinuous: state.isContinuous,
+      createGrid: state.createGrid,
+      getGridDimensions: state.getGridDimensions,
+      setContinuousGrid: state.setContinuousGrid,
+      clearGrid: state.clearGrid,
+      changeRules: state.changeRules,
+      currentRules: state.currentRules,
+    })));
 
   const { rows, cols } = getGridDimensions();
 

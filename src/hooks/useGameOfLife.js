@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import { shallow } from 'zustand/shallow';
+import { useShallow } from 'zustand/react/shallow';
 import { useGameStore } from './gameStore';
 
 export const useGameOfLife = ({ onStabilize } = {}) => {
@@ -42,7 +42,7 @@ export const useGameOfLife = ({ onStabilize } = {}) => {
     updateCellChanges,
     stabilized,
   } = useGameStore(
-    (state) => ({
+    useShallow((state) => ({
       getGridArray: state.getGridArray,
       activeCells: state.activeCells,
       bornCells: state.bornCells,
@@ -74,9 +74,7 @@ export const useGameOfLife = ({ onStabilize } = {}) => {
       simulationIntervalRef: state.simulationIntervalRef,
       updateCellChanges: state.updateCellChanges,
       stabilized: state.stabilized,
-    }),
-    shallow,
-  );
+    })));
 
   useEffect(() => () => {
     if (simulationIntervalRef) {
