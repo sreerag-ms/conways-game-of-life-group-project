@@ -71,7 +71,7 @@ const Controls = () => {
           onClick={isRunning ? stopSimulation : startSimulation}
           shape="rounded"
           className="flex items-center justify-center"
-          style={{ width: '100px', height: '35px', fontSize: '20px', borderWidth: '2px' }}
+          style={{ width: '120px', height: '45px', fontSize: '20px', borderWidth: '2px', borderRadius: '15px' }}
         >
           {isRunning ? 'Pause' : 'Run'}
         </Button>

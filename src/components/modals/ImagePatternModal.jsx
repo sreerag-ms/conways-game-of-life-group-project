@@ -30,7 +30,7 @@ const ImagePatternModal = ({ isVisible, onClose }) => {
     >
       <div className="flex flex-col gap-6">
         <div>
-          <h3 className="mb-3 text-base font-medium">Image Pattern Editor</h3>
+          <h3 className="mb-3 text-base font-medium"></h3>
           <p className="mb-3 text-sm text-gray-600">
             Upload an image to convert it into a game pattern. Dark pixels will become live cells.
           </p>
