@@ -5,7 +5,7 @@ import { useGameOfLifeTheme } from '../../../hooks/useGameOfLifeTheme';
 import { FRAGMENT_SHADER_SOURCE, VERTEX_SHADER_SOURCE } from './constants';
 import { hexToRgb } from './utils';
 
-const WebGLGrid = ({ cellSize = 15 }) => {
+const WebGLGrid = ({ cellSize = 15, setStabilizedModalOpen }) => {
 
   const {
     activeCells,
@@ -18,7 +18,16 @@ const WebGLGrid = ({ cellSize = 15 }) => {
     placePattern,
     createGrid,
     generation,
+    stabilized,
   } = useGameOfLife();
+
+  useEffect(() => {
+    console.log('Stabilized:', stabilized);
+
+    if (stabilized) {
+      setStabilizedModalOpen(true);
+    }
+  }, [stabilized, setStabilizedModalOpen]);
 
   const { theme } = useGameOfLifeTheme();
 

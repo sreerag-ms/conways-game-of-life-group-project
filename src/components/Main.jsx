@@ -1,9 +1,6 @@
-import { Layout } from 'antd';
 import React, { useState } from 'react';
 import Game from './Game';
 import GridStabilizedModal from './modals/GridStabilizedModal';
-
-const { Header, Content, Footer } = Layout;
 
 const Main = () => {
   const [stabilizedModalOpen, setStabilizedModalOpen] = useState(false);

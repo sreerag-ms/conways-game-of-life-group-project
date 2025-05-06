@@ -4,14 +4,14 @@ import GridWrapper from '../wrappers/GridWrapper';
 import Patterns from './Patterns';
 import ToolBar from './ToolBar';
 
-const GridSection = () => (
+const GridSection = ({ setStabilizedModalOpen }) => (
   <GridWrapper>
     <div className="flex flex-col items-center w-full md:flex-row md:items-start md:space-x-4">
       <div className="flex flex-col mb-4 overflow-auto bg-primary md:w-4/5 md:mb-0">
         <div className="mb-2">
           <ToolBar />
         </div>
-        <WebGLGrid />
+        <WebGLGrid setStabilizedModalOpen={setStabilizedModalOpen} />
       </div>
       <div className="flex flex-col w-full gap-4 overflow-visible md:w-80">
         <Patterns />

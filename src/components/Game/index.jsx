@@ -9,7 +9,7 @@ const Game = ({ setStabilizedModalOpen }) => (
     <SimulationControls />
 
     <div className="pb-4 overflow-auto">
-      <GridSection />
+      <GridSection setStabilizedModalOpen={setStabilizedModalOpen} />
     </div>
   </Content>
 );
