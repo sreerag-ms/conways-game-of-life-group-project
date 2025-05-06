@@ -1,15 +1,12 @@
 # Implementing and Extending Conway's Game of Life as a Web Application
 
-
 ## Project Features
-
 - Web-based implementation of Conway's Game of Life with modern UI
 - Multiple rule sets beyond the standard Conway rules
 - Pattern library with classic structures
 - Real-time simulation with adjustable speed
 - Data visualization of population metrics
 - Customizable grid colors and appearance
-- Responsive design that works on various screen sizes
 
 
 ## Index
@@ -73,7 +70,7 @@ Before you begin, ensure you have the following installed on your machine:
 
 ### Run with Docker 
 
-The application is containerised using Docker, making it easy to run on any machine without worrying about dependencies.
+The application is containerised using Docker, making it easy to run on any machine without worrying about dependencies. Run all the commands from the root of the project.
 
 #### Development Mode
 
@@ -107,6 +104,8 @@ If you encounter any issues:
 ---
 
 ### Using local machine
+
+These are the setup instructions without using docker. Run all the commands from the root of the project. 
 
 #### System Requirements
 
@@ -143,7 +142,7 @@ If you encounter any issues:
 
 ## Statement of contribution
 
-Below, we outline the individual and shared contributions to ensure transparency and proper acknowledgement of each member's work.
+Below, we outline the individual and shared contributions to ensure transparency and proper acknowledgement of each team member's work.
 
 ### Individual Contributions
 
