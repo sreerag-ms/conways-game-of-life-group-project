@@ -17,6 +17,7 @@ const WebGLGrid = ({ cellSize = 15 }) => {
     toggleCell,
     placePattern,
     createGrid,
+    generation,
   } = useGameOfLife();
 
   const { theme } = useGameOfLifeTheme();
@@ -437,7 +438,7 @@ const WebGLGrid = ({ cellSize = 15 }) => {
 
   return (
     <div className="flex flex-col items-center w-full rounded-lg" ref={containerRef}>
-      <div className="flex items-center justify-center overflow-auto border-gray-300 rounded-lg w-fit max-h-4/5 ">
+      <div className="relative flex items-center justify-center overflow-auto border-gray-300 rounded-lg w-fit max-h-4/5 ">
         <div
           className='bg-gray-500'
           style={{
@@ -463,6 +464,19 @@ const WebGLGrid = ({ cellSize = 15 }) => {
               }}
             />
           </div>
+        </div>
+        <div
+          className="absolute px-3 py-1 font-semibold text-black rounded bg-slate-100 bg-opacity-30"
+          style={{
+            bottom: 5,
+            right: 5,
+            fontSize: '0.7rem',
+            fontWeight: 'normal',
+            zIndex: 10,
+            backgroundColor: 'rgba(250, 250, 250, 0.6)',
+          }}
+        >
+              Generation: {generation}
         </div>
       </div>
     </div>
