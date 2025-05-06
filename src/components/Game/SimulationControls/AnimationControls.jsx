@@ -22,7 +22,7 @@ const AnimationControls = () => {
     <div>
       <div className="flex items-center space-x-4 ">
         <div className="flex items-center px-2 py-1 rounded-md h-9 secondary-bg">
-          <span className="mr-2 text-sm text-gray-700">Animation delay:</span>
+          <span className="mr-2 text-sm primary-text">Animation delay:</span>
           <Slider
             className="w-24 mb-0"
             min={5}
@@ -35,7 +35,7 @@ const AnimationControls = () => {
           />
         </div>
         <div className="flex items-center px-2 py-1 rounded-md h-9 secondary-bg">
-          <span className="mr-2 text-sm text-gray-700">Next generation preview:</span>
+          <span className="mr-2 text-sm primary-text">Next generation preview:</span>
           <Switch
             size="small"
             checked={showChanges}
