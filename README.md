@@ -19,16 +19,17 @@
   - [Index](#index)
   - [Quick Access Options](#quick-access-options)
     - [Option 1: Access the Live Deployment](#option-1-access-the-live-deployment)
-    - [Option 2: Run the Pre-built Version Locally](#option-2-run-the-pre-built-version-locally)
+    - [Option 2: Run the Pre-built Version Locally (Without using other nodejs)](#option-2-run-the-pre-built-version-locally-without-using-other-nodejs)
   - [Development Setup](#development-setup)
+    - [Using docker setup"](#using-docker-setup)
+  - [Prerequisites](#prerequisites)
+    - [Run with Docker](#run-with-docker)
+      - [Development Mode](#development-mode)
+      - [Production Mode](#production-mode)
+  - [Possible issues and their fixes](#possible-issues-and-their-fixes)
     - [Using local machine](#using-local-machine)
       - [System Requirements](#system-requirements)
-      - [Installation Steps](#installation-steps)
       - [Running the Application](#running-the-application)
-    - [Using docker setup"](#using-docker-setup)
-      - [Running development mode](#development-mode)
-      - [Running production mode](#production-mode)
-      - [Troubleshooting](#troubleshooting)
   - [Statement of contribution](#statement-of-contribution)
     - [Individual Contributions](#individual-contributions)
     - [Shared Contributions](#shared-contributions)
@@ -43,75 +44,22 @@
 
 [https://gameoflife.site/](https://gameoflife.site/)
 
-### Option 2: Run the Pre-built Version Locally
+### Option 2: Run the Pre-built Version Locally (Without using other nodejs)
 
-For the purpose of this coursework, the build folder has been included in the repository.
+For the purpose of this coursework, the build folder has been included in the repository. Run all the commands from the root of the project.
 
 1. **Using Python to serve the files:**
    ```sh
-   cd ./dist
+   cd ./builds
    python -m http.server 5001
    ```
    The website will be available at http://localhost:5001
 
-2. **Using npm (if Node.js is installed):**
-   ```sh
-   npm run preview
-   ```
-   This will serve the contents of the `dist` folder at http://localhost:4173
-
----
-
 ## Development Setup
 
 **Note for evaluator**
-The following is the development setup instructions for the project. Proceed with this only if it  is needed to test the applicaiton/make changes to the existing app and test it out.
+The following is the development setup instructions for the project. Proceed with this only if it is needed to test the applicaiton/make changes to the existing app and test it out.
 
-### Using local machine
-#### System Requirements
-
-- **Node.js**: v18 or higher (recommended: v20 LTS)
-- **npm**: v9 or higher (comes with Node.js)
-- **Modern Web Browser**: Chrome, Firefox, Edge, or Safari
-- **Operating System**: Windows 10/11, macOS 12+, or Linux
-- **Memory**: At least 4GB RAM
-- **Disk Space**: At least 500MB free space
-
-#### Installation Steps
-
-1. **Open the project:**
-   ```sh
-   cd conways-game-of-life-group-project
-   ```
-
-2. **Install dependencies:**
-   ```sh
-   npm install
-   ```
-   This will install all required packages defined in the package.json file, including React, Ant Design, TailwindCSS, and other dependencies.
-
-#### Running the Application
-
-1. **Start the development server:**
-   ```sh
-   npm run dev
-   ```
-   This will start the Vite development server with hot reloading enabled.
-
-2. **Access the application:**
-   - The app will be available at [http://localhost:5173](http://localhost:5173) by default
-   - If port 5173 is already in use, Vite will automatically use another port (check the terminal output)
-
-3. **Stopping the application:**
-   - Press `Ctrl+C` in the terminal to stop the development server
-
-4. **Running the linter:**
-   ```sh
-   npm run lint
-   ```
-   This will check your code for any formatting or style issues according to the project's ESLint configuration.
-
----
 
 ### Using docker setup"
 
@@ -147,7 +95,7 @@ docker-compose up app
 
 This will serve the optimised production build at [http://localhost:8080](http://localhost:8080).
 
-## Troubleshooting
+## Possible issues and their fixes
 
 If you encounter any issues:
 
@@ -155,6 +103,41 @@ If you encounter any issues:
 2. Check if ports 5173 and 8080 are available on your machine
 3. Try rebuilding the Docker images with `docker-compose build`
 4. For Docker permission issues on Linux, you might need to run the commands with `sudo`
+
+---
+
+### Using local machine
+
+#### System Requirements
+
+- **Node.js**: v18 or higher (recommended: v20 LTS). [Installation docs.](https://docs.npmjs.com/downloading-and-installing-node-js-and-npm)
+- **npm**: v9 or higher (comes with Node.js)
+- **bun**: Bun package manager. [Installation docs.](https://bun.sh/).
+- **Modern Web Browser**: Chrome, Firefox, Edge, or Safari
+- **Operating System**: Windows 10/11, macOS 12+, or Linux
+- **Memory**: At least 4GB RAM
+- **Disk Space**: At least 500MB free space
+
+#### Running the Application
+
+1. ```sh
+   bun install
+   ```
+   This will install all required packages defined in the package.json file, including React, Ant Design, TailwindCSS, and other dependenci
+
+2. **Start the development server:**
+   ```sh
+   bun run dev
+   ```
+   This will start the Vite development server with hot reloading enabled.
+
+3. **Access the application:**
+   - The app will be available at [http://localhost:5173](http://localhost:5173) by default
+   - If port 5173 is already in use, Vite will automatically use another port (check the terminal output)
+
+4. **Stopping the application:**
+   - Press `Ctrl+C` in the terminal to stop the development server
+
 
 ---
 
@@ -185,4 +168,4 @@ Below, we outline the individual and shared contributions to ensure transparency
 - Co‐authored the README, covering setup, running instructions, and sample I/O
 - Performed the final review and editing of code, documentation, and report
 
-All code in this repository is original. External resources and packages (such as React and Zustand) are properly referenced where applicable. The package.json file provides a complete list of dependencies used in the project. These packages do not directly contribute to the core simulation logic; they are standard JavaScript and React libraries supporting web development tasks such as state management and UI rendering. The main simulation logic, shared code, and user interface were developed collaboratively, with equal contributions from both authors. The complete source code, along with accompanying documentation, will be submitted separately. 
+All code in this repository is original. External resources and packages (such as React and Zustand) are properly referenced in the report. The package.json file at the repository root, provides a complete list of dependencies used in the project. These packages do not directly contribute to the core simulation logic; they are standard JavaScript and React libraries supporting web development tasks such as state management and UI rendering. The main simulation logic, shared code, and user interface were developed collaboratively, with equal contributions from both authors. This project contains complete source code, along with accompanying documentation. 
