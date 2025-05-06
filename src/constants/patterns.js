@@ -408,7 +408,7 @@ export const PATTERNS = {
 
   highLifeReplicator: {
     name: 'HighLife Replicator',
-    description: 'A 6-cell pattern that self-replicates every 12 generations in HighLife (B36/S23)',
+    description: 'A unique pattern in HighLife that replicates itself every 12 generations',
     width: 5,
     height: 5,
     cells: [
