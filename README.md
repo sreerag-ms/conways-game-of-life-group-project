@@ -72,16 +72,15 @@ The following is the development setup instructions for the project. Proceed wit
 
 - **Node.js**: v18 or higher (recommended: v20 LTS)
 - **npm**: v9 or higher (comes with Node.js)
-- **Modern Web Browser**: Chrome (v120+), Firefox (v120+), Edge (v120+), or Safari (v17+)
+- **Modern Web Browser**: Chrome, Firefox, Edge, or Safari
 - **Operating System**: Windows 10/11, macOS 12+, or Linux
 - **Memory**: At least 4GB RAM
 - **Disk Space**: At least 500MB free space
 
 #### Installation Steps
 
-1. **Clone the repository:**
+1. **Open the project:**
    ```sh
-   git clone <repo-url>
    cd conways-game-of-life-group-project
    ```
 
