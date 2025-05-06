@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react';
 import { useShallow } from 'zustand/react/shallow';
 import { useGameStore } from './gameStore';
 
+// TODO: Use the store directly, prevent the use if this hook
 export const useGameOfLife = ({ onStabilize } = {}) => {
   const onStabilizeRef = useRef(onStabilize);
 

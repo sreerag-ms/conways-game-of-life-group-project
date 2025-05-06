@@ -3,7 +3,7 @@ import { create } from 'zustand';
 export const useCanvasStore = create((set) => ({
   zoom: 1,
   panOffset: { x: 0, y: 0 },
-  activeTool: 'mouse', // 'mouse', 'hand'
+  activeTool: 'mouse',
   isDragging: false,
   dragStart: { x: 0, y: 0 },
 

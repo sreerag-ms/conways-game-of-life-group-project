@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useCanvasStore } from '../../../hooks/canvasStore';
+import { DEFAULT_COLS, DEFAULT_ROWS } from '../../../hooks/constants';
 import { useGameOfLife } from '../../../hooks/useGameOfLife';
 import { useGameOfLifeTheme } from '../../../hooks/useGameOfLifeTheme';
 import { FRAGMENT_SHADER_SOURCE, VERTEX_SHADER_SOURCE } from './constants';
@@ -46,12 +47,11 @@ const WebGLGrid = ({ cellSize = 15, setStabilizedModalOpen }) => {
   const [hoveredCell, setHoveredCell] = useState({ row: -1, col: -1 });
 
   useEffect(() => {
-    createGrid(50, 50);
+    createGrid(DEFAULT_ROWS, DEFAULT_COLS);
   }, [createGrid]);
 
   useEffect(() => {
     const calculateCellSize = () => {
-      // Use the same dimensions as the container in the render method
       const containerWidth = 800;
       const containerHeight = 500;
 
@@ -60,6 +60,7 @@ const WebGLGrid = ({ cellSize = 15, setStabilizedModalOpen }) => {
 
       let optimalSize = Math.min(maxCellWidth, maxCellHeight);
 
+      // Adjusts the cell size based on the grid dimensions
       if (rows <= 10 && cols <= 10) {
         optimalSize = Math.min(50, optimalSize);
       } else if (rows <= 20 && cols <= 20) {
@@ -74,9 +75,15 @@ const WebGLGrid = ({ cellSize = 15, setStabilizedModalOpen }) => {
         optimalSize = Math.min(12, optimalSize);
       } else if (rows <= 150 && cols <= 150) {
         optimalSize = Math.min(8, optimalSize);
+      } else if (rows <= 500 && cols <= 500) {
+        optimalSize = Math.min(4, optimalSize);
+      } else if (rows <= 1000 && cols <= 1000) {
+        optimalSize = Math.min(2, optimalSize);
+      } else {
+        optimalSize = 1;
       }
 
-      return Math.max(4, optimalSize);
+      return Math.max(1, optimalSize);
     };
 
     setResponsiveCellSize(calculateCellSize());
@@ -90,14 +97,26 @@ const WebGLGrid = ({ cellSize = 15, setStabilizedModalOpen }) => {
     return () => window.removeEventListener('resize', handleResize);
   }, [rows, cols, cellSize]);
 
-  // Set up WebGL context
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
 
-    const gl = canvas.getContext('webgl', { antialias: false });
+    let gl = canvas.getContext('webgl2', { antialias: false });
+
     if (!gl) {
-      return;
+      gl = canvas.getContext('webgl', { antialias: false });
+      if (!gl) {
+        console.error('WebGL not supported');
+
+        return;
+      }
+    }
+
+    const maxTextureSize = gl.getParameter(gl.MAX_TEXTURE_SIZE);
+    console.log(`Maximum texture size supported: ${maxTextureSize}x${maxTextureSize}`);
+
+    if (rows > maxTextureSize || cols > maxTextureSize) {
+      console.warn(`Grid size (${cols}x${rows}) exceeds maximum texture size (${maxTextureSize}x${maxTextureSize}). Some cells might not render correctly.`);
     }
 
     rendererRef.current = gl;
@@ -151,7 +170,6 @@ const WebGLGrid = ({ cellSize = 15, setStabilizedModalOpen }) => {
       },
     };
 
-    // Cleanup
     return () => {
       gl.deleteProgram(program);
       gl.deleteShader(vertexShader);
@@ -162,14 +180,26 @@ const WebGLGrid = ({ cellSize = 15, setStabilizedModalOpen }) => {
     };
   }, []);
 
-  // Handle canvas resizing and rendering
   useEffect(() => {
     if (!rendererRef.current || !programRef.current || !canvasRef.current) return;
 
     const gl = rendererRef.current;
     const canvas = canvasRef.current;
-    const width = cols * responsiveCellSize;
-    const height = rows * responsiveCellSize;
+
+    let width = cols * responsiveCellSize;
+    let height = rows * responsiveCellSize;
+
+    const MAX_CANVAS_DIMENSION = 16384;
+    if (width > MAX_CANVAS_DIMENSION || height > MAX_CANVAS_DIMENSION) {
+      const aspectRatio = width / height;
+      if (width > height) {
+        width = MAX_CANVAS_DIMENSION;
+        height = Math.floor(width / aspectRatio);
+      } else {
+        height = MAX_CANVAS_DIMENSION;
+        width = Math.floor(height * aspectRatio);
+      }
+    }
 
     canvas.width = width;
     canvas.height = height;
@@ -181,18 +211,26 @@ const WebGLGrid = ({ cellSize = 15, setStabilizedModalOpen }) => {
     render();
   }, [rows, cols, responsiveCellSize, activeCells, bornCells, dyingCells, hoveredCell, showChanges, theme]);
 
-  // Render cells
   const render = useCallback(() => {
     if (!rendererRef.current || !programRef.current || !cellsTextureRef.current) return;
 
     const gl = rendererRef.current;
     const program = programRef.current;
-    const width = cols;
-    const height = rows;
 
-    const cellsData = new Uint8Array(width * height * 4);
+    const maxTextureSize = gl.getParameter(gl.MAX_TEXTURE_SIZE);
+    const width = Math.min(cols, maxTextureSize);
+    const height = Math.min(rows, maxTextureSize);
 
-    // Initialize all cells
+    let cellsData;
+
+    try {
+      cellsData = new Uint8Array(width * height * 4);
+    } catch (e) {
+      console.error('Failed to allocate memory for cells texture. Try reducing grid size.', e);
+
+      return;
+    }
+
     for (let i = 0; i < cellsData.length; i += 4) {
       cellsData[i] = 0;
       cellsData[i + 1] = 0;
@@ -200,7 +238,7 @@ const WebGLGrid = ({ cellSize = 15, setStabilizedModalOpen }) => {
       cellsData[i + 3] = 255;
     }
 
-    // Mark active cells
+    // mark active cells
     activeCells.forEach(cellKey => {
       const [row, col] = cellKey.split(',').map(Number);
       if (row >= 0 && row < height && col >= 0 && col < width) {
@@ -209,7 +247,7 @@ const WebGLGrid = ({ cellSize = 15, setStabilizedModalOpen }) => {
       }
     });
 
-    // Mark born and dying cells if showing changes
+    // mark born and dying cells if showing changes
     if (showChanges && bornCells && dyingCells) {
       bornCells.forEach(cellKey => {
         const [row, col] = cellKey.split(',').map(Number);
@@ -228,7 +266,6 @@ const WebGLGrid = ({ cellSize = 15, setStabilizedModalOpen }) => {
       });
     }
 
-    // Set up buffer
     const left = 0;
     const right = canvasWidth.current;
     const top = 0;
@@ -244,17 +281,20 @@ const WebGLGrid = ({ cellSize = 15, setStabilizedModalOpen }) => {
       right, bottom,
     ]), gl.STATIC_DRAW);
 
-    // Update texture
     gl.bindTexture(gl.TEXTURE_2D, cellsTextureRef.current);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
-    gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,width,height,0,gl.RGBA,gl.UNSIGNED_BYTE,cellsData);
+
+    try {
+      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, width, height, 0, gl.RGBA, gl.UNSIGNED_BYTE, cellsData);
+    } catch (e) {
+      console.error('WebGL error while updating texture. Grid might be too large.', e);
+    }
 
     gl.useProgram(program.program);
 
-    // Set uniforms
     gl.uniform2f(program.uniformLocations.resolution, canvasWidth.current, canvasHeight.current);
     gl.uniform1f(program.uniformLocations.cellSize, responsiveCellSize);
     gl.uniform2f(program.uniformLocations.gridSize, cols, rows);
@@ -262,7 +302,6 @@ const WebGLGrid = ({ cellSize = 15, setStabilizedModalOpen }) => {
     gl.uniform1i(program.uniformLocations.showHoverEffect, hoveredCell.row >= 0 && hoveredCell.col >= 0 ? 1 : 0);
     gl.uniform1i(program.uniformLocations.showChanges, showChanges ? 1 : 0);
 
-    // Set theme colors
     const aliveColor = hexToRgb(theme.alive || '#ff8888');
     const deadColor = hexToRgb(theme.dead || '#ffffff');
     const bornColor = hexToRgb(theme.born || '#60a5fa');
@@ -274,7 +313,6 @@ const WebGLGrid = ({ cellSize = 15, setStabilizedModalOpen }) => {
     gl.uniform4f(program.uniformLocations.dieColor, dieColor.r, dieColor.g, dieColor.b, 1.0);
     gl.uniform1i(program.uniformLocations.cells, 0);
 
-    // Set attributes
     gl.enableVertexAttribArray(program.attribLocations.position);
     gl.bindBuffer(gl.ARRAY_BUFFER, program.buffers.position);
     gl.vertexAttribPointer(program.attribLocations.position, 2, gl.FLOAT, false, 0, 0);
@@ -283,13 +321,12 @@ const WebGLGrid = ({ cellSize = 15, setStabilizedModalOpen }) => {
     gl.bindBuffer(gl.ARRAY_BUFFER, program.buffers.texCoord);
     gl.vertexAttribPointer(program.attribLocations.texCoord, 2, gl.FLOAT, false, 0, 0);
 
-    // Draw
     gl.clearColor(0.9, 0.9, 0.9, 1.0);
     gl.clear(gl.COLOR_BUFFER_BIT);
     gl.drawArrays(gl.TRIANGLES, 0, 6);
   }, [cols, rows, activeCells, bornCells, dyingCells, responsiveCellSize, showChanges, hoveredCell, theme]);
 
-  // Convert screen coordinates to cell coordinates, accounting for zoom and pan
+  // convert screen coordinates to cell coordinates
   const screenToGridCoordinates = useCallback((screenX, screenY) => {
     const canvas = canvasRef.current;
     if (!canvas) return { row: -1, col: -1 };
@@ -305,19 +342,16 @@ const WebGLGrid = ({ cellSize = 15, setStabilizedModalOpen }) => {
     return { row, col };
   }, [zoom, panOffset, responsiveCellSize]);
 
-  // Mouse event handlers
   const handleMouseMove = useCallback((event) => {
     const canvas = canvasRef.current;
     if (!canvas) return;
 
     if (isDragging && activeTool === 'hand') {
-      // Handle panning
       const deltaX = event.clientX - dragStart.x;
       const deltaY = event.clientY - dragStart.y;
       updatePanOffset(deltaX, deltaY);
       setDragStart(event.clientX, event.clientY);
     } else {
-      // Handle cell hovering
       const { row, col } = screenToGridCoordinates(event.clientX, event.clientY);
 
       if (row >= 0 && row < rows && col >= 0 && col < cols) {
@@ -353,7 +387,7 @@ const WebGLGrid = ({ cellSize = 15, setStabilizedModalOpen }) => {
   }, [isDragging, setIsDragging]);
 
   const handleCanvasClick = useCallback((event) => {
-    // Only handle cell clicking when using the mouse tool
+    // only handle cell clicking when using the mouse tool
     if (activeTool !== 'mouse' || isDragging) return;
 
     const { row, col } = screenToGridCoordinates(event.clientX, event.clientY);
@@ -363,18 +397,15 @@ const WebGLGrid = ({ cellSize = 15, setStabilizedModalOpen }) => {
     }
   }, [activeTool, isDragging, toggleCell, rows, cols, screenToGridCoordinates]);
 
-  // Handle drag over event to indicate valid drop target
   const handleDragOver = useCallback((event) => {
-    event.preventDefault(); // Necessary to allow dropping
+    event.preventDefault();
     event.dataTransfer.dropEffect = 'copy';
   }, []);
 
-  // Handle drop event to place pattern
   const handleDrop = useCallback((event) => {
     event.preventDefault();
 
     try {
-      // Get pattern data from the drag event
       const patternData = JSON.parse(event.dataTransfer.getData('application/json'));
 
       if (!patternData || !patternData.cells) {
@@ -383,17 +414,15 @@ const WebGLGrid = ({ cellSize = 15, setStabilizedModalOpen }) => {
         return;
       }
 
-      // Calculate drop position using our helper function
       const { row, col } = screenToGridCoordinates(event.clientX, event.clientY);
 
-      // Place the pattern at the drop position
       placePattern(patternData, row, col);
     } catch (error) {
       console.error('Error handling pattern drop:', error);
     }
   }, [placePattern, screenToGridCoordinates]);
 
-  // WebGL helpers
+  // webgl helpers
   const createShader = (gl, type, source) => {
     const shader = gl.createShader(type);
     gl.shaderSource(shader, source);
@@ -426,7 +455,6 @@ const WebGLGrid = ({ cellSize = 15, setStabilizedModalOpen }) => {
     return program;
   };
 
-  // Set cursor style based on active tool
   useEffect(() => {
     if (canvasRef.current) {
       canvasRef.current.style.cursor = activeTool === 'hand'
@@ -435,7 +463,6 @@ const WebGLGrid = ({ cellSize = 15, setStabilizedModalOpen }) => {
     }
   }, [activeTool, isDragging]);
 
-  // Set up mouse event listeners
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -457,7 +484,7 @@ const WebGLGrid = ({ cellSize = 15, setStabilizedModalOpen }) => {
     };
   }, [handleMouseMove, handleMouseDown, handleMouseUp, handleMouseLeave, handleDragOver, handleDrop]);
 
-  // Calculate if grid should be centered (add this before the return statement)
+  // calculate if grid should be centered
   const gridWidth = cols * responsiveCellSize;
   const gridHeight = rows * responsiveCellSize;
   const containerWidth = 800;
@@ -465,13 +492,19 @@ const WebGLGrid = ({ cellSize = 15, setStabilizedModalOpen }) => {
   const centerX = gridWidth < containerWidth ? (containerWidth - gridWidth) / 2 : 0;
   const centerY = gridHeight < containerHeight ? (containerHeight - gridHeight) / 2 : 0;
 
+  useEffect(() => {
+    if (rows > 3000 || cols > 3000) {
+      console.warn(`Very large grid detected (${cols}x${rows}). Performance may be impacted.`);
+    }
+  }, [rows, cols]);
+
   return (
     <div className="flex flex-col items-center w-full rounded-lg" ref={containerRef}>
       <div className="relative flex items-center justify-center w-full overflow-hidden border-gray-300 rounded-lg"
         style={{
-          width: '800px', // Fixed width
-          height: '500px', // Fixed height
-          maxWidth: '100%', // Responsive on small screens
+          width: '800px',
+          height: '500px',
+          maxWidth: '100%',
         }}>
         <div
           className='bg-gray-100'

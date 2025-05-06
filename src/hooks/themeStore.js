@@ -44,7 +44,6 @@ export const useThemeStore = create((set) => ({
   },
 
   setFullTheme: (newTheme) => {
-    // Ensure all required colors are present
     const completeTheme = {
       ...getDefaultColorsObject(),
       ...newTheme,

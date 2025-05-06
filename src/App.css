@@ -3,14 +3,6 @@
   text-align: center;
 }
 
-@media (min-width: 640px) {
-
-}
-
-@media (min-width: 768px) {
-
-}
-
 .logo {
   height: 6em;
   padding: 1.5em;
@@ -80,8 +72,6 @@
 .cell.alive {
   animation: fade-in 0.2s ease-in;
 }
-
-
 
 .secondary-bg {
   background-color: #b9e6e6 !important;

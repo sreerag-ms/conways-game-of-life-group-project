@@ -4,7 +4,7 @@ import GridWrapper from '../wrappers/GridWrapper';
 import Patterns from './Patterns';
 import ToolBar from './ToolBar';
 
-const GridSection = ({ setStabilizedModalOpen }) => (
+const GridSection = () => (
   <GridWrapper>
     <div className="flex flex-col items-center w-full lg:flex-row md:items-start md:space-x-4">
       <div className="flex flex-col items-center mb-4 md:mb-0 md:flex-grow">

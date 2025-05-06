@@ -5,7 +5,7 @@ const coordToString = (row, col) => `${row},${col}`;
 const stringToCoord = (str) => str.split(',').map(Number);
 
 export const useGameStore = create((set, get) => ({
-  // State
+  // state for game of life
   activeCells: new Set(),
   previousActiveCells: new Set(),
   bornCells: new Set(),
@@ -22,27 +22,25 @@ export const useGameStore = create((set, get) => ({
   generation: 0,
   stabilized: false,
 
-  // Methods
+  // get next state for all cells
   getNextStateSet: () => {
     const { activeCells, rows, cols, currentRules, isContinuous } = get();
     const nextActiveCells = new Set();
     const cellsToCheck = new Set();
     const rules = RULES[currentRules];
 
-    // Add all active cells to check
     activeCells.forEach(coordStr => {
       cellsToCheck.add(coordStr);
 
-      // Add all neighbors to check
+      // add all neighbors to check
       const [row, col] = stringToCoord(coordStr);
       for (let i = -1; i <= 1; i++) {
         for (let j = -1; j <= 1; j++) {
           if (i === 0 && j === 0) continue;
 
-          // Handle continuous vs non-continuous grid
           let newRow, newCol;
           if (isContinuous) {
-            // Wrap around the edges (continuous)
+            // wrap around edges
             newRow = (row + i + rows) % rows;
             newCol = (col + j + cols) % cols;
           } else {
@@ -59,12 +57,11 @@ export const useGameStore = create((set, get) => ({
       }
     });
 
-    // Check all cells that might change state
     cellsToCheck.forEach(coordStr => {
       const [row, col] = stringToCoord(coordStr);
       const isAlive = activeCells.has(coordStr);
 
-      // Count live neighbors
+      // count live neighbors
       let liveNeighbors = 0;
       for (let i = -1; i <= 1; i++) {
         for (let j = -1; j <= 1; j++) {
@@ -72,15 +69,12 @@ export const useGameStore = create((set, get) => ({
 
           let neighborRow, neighborCol;
           if (isContinuous) {
-            // Wrap around the edges (continuous)
             neighborRow = (row + i + rows) % rows;
             neighborCol = (col + j + cols) % cols;
           } else {
-            // No wrapping (non-continuous)
             neighborRow = row + i;
             neighborCol = col + j;
 
-            // Skip if outside grid boundaries
             if (neighborRow < 0 || neighborRow >= rows || neighborCol < 0 || neighborCol >= cols) {
               continue;
             }
@@ -94,12 +88,10 @@ export const useGameStore = create((set, get) => ({
         }
       }
 
-      // Apply rules
+      // apply rules
       if (isAlive && rules.S.includes(liveNeighbors)) {
-        // Cell survives
         nextActiveCells.add(coordStr);
       } else if (!isAlive && rules.B.includes(liveNeighbors)) {
-        // Cell is born
         nextActiveCells.add(coordStr);
       }
     });
@@ -107,7 +99,7 @@ export const useGameStore = create((set, get) => ({
     return nextActiveCells;
   },
 
-  // Compare two sets of active cells
+  // compare two sets of active cells
   areGridsEqual: (cells1, cells2) => {
     if (cells1.size !== cells2.size) return false;
     for (const cell of cells1) {
@@ -121,10 +113,10 @@ export const useGameStore = create((set, get) => ({
     const { activeCells } = get();
     set({ previousActiveCells: new Set(activeCells) });
 
-    // Always calculate next generation metrics
+    // always calculate next generation metrics
     const nextGeneration = get().getNextStateSet();
 
-    // Find cells that will be born (in next gen but not in current)
+    // find cells that will be born (in next gen but not in current)
     const newBornCells = new Set();
     nextGeneration.forEach(cell => {
       if (!activeCells.has(cell)) {
@@ -132,7 +124,7 @@ export const useGameStore = create((set, get) => ({
       }
     });
 
-    // Find cells that will die (in current but not in next gen)
+    // find cells that will die (in current but not in next gen)
     const newDyingCells = new Set();
     activeCells.forEach(cell => {
       if (!nextGeneration.has(cell)) {
@@ -140,7 +132,6 @@ export const useGameStore = create((set, get) => ({
       }
     });
 
-    // Always update the born/dying cells for metrics
     set({
       bornCells: newBornCells,
       dyingCells: newDyingCells,
@@ -181,13 +172,11 @@ export const useGameStore = create((set, get) => ({
   calculateNextGeneration: (onStabilize) => {
     const { activeCells } = get();
 
-    // Store the current state before changing
     set({ previousActiveCells: new Set(activeCells) });
 
-    // Get the next state set
     const nextActiveCells = get().getNextStateSet();
 
-    // Check if the grid has stabilized
+    // check if grid has stabilized
     const hasStabilized = get().areGridsEqual(activeCells, nextActiveCells);
     if (hasStabilized) {
       set({ stabilized: true });
@@ -205,12 +194,11 @@ export const useGameStore = create((set, get) => ({
       stabilized: false,
     }));
 
-    // Collect metrics after state update
     get().collectMetrics();
   },
 
   createGrid: (rowCount, colCount) => {
-    console.log('Creating grid with dimensions:', rowCount, colCount);
+    console.log('creating grid with dimensions:', rowCount, colCount);
     set({
       rows: rowCount,
       cols: colCount,
@@ -300,12 +288,12 @@ export const useGameStore = create((set, get) => ({
   startSimulation: (onStabilize) => {
     const { activeCells, simulationSpeed, simulationIntervalRef } = get();
     if (activeCells.size > 0) {
-      // Clean up any existing interval
+      // clean up any existing interval
       if (simulationIntervalRef) {
         clearInterval(simulationIntervalRef);
       }
 
-      // Set up new interval
+      // set up new interval
       console.log(`Starting simulation with speed: ${simulationSpeed}ms`);
       const intervalId = window.setInterval(() => {
         get().calculateNextGeneration(onStabilize);
@@ -323,7 +311,7 @@ export const useGameStore = create((set, get) => ({
     const { isRunning, simulationIntervalRef } = get();
     set({ simulationSpeed: newSpeed });
 
-    // If simulation is running, restart with new speed
+    // if simulation is running, restart with new speed
     if (isRunning) {
       if (simulationIntervalRef) {
         clearInterval(simulationIntervalRef);
@@ -346,11 +334,11 @@ export const useGameStore = create((set, get) => ({
     const newShowChanges = typeof value === 'boolean' ? value : !showChanges;
     set({ showChanges: newShowChanges });
 
-    // Calculate born and dying cells when enabling
+    // calculate born and dying cells when enabling
     if (newShowChanges) {
       const nextGeneration = get().getNextStateSet();
 
-      // Find cells that will be born (in next gen but not in current)
+      // find cells that will be born (in next gen but not in current)
       const newBornCells = new Set();
       nextGeneration.forEach(cell => {
         if (!activeCells.has(cell)) {
@@ -358,7 +346,7 @@ export const useGameStore = create((set, get) => ({
         }
       });
 
-      // Find cells that will die (in current but not in next gen)
+      // find cells that will die (in current but not in next gen)
       const newDyingCells = new Set();
       activeCells.forEach(cell => {
         if (!nextGeneration.has(cell)) {
@@ -377,23 +365,23 @@ export const useGameStore = create((set, get) => ({
     const { activeCells, rows, cols } = get();
     const nextActiveCells = new Set(activeCells);
 
-    // Check if the pattern fits on the grid
+    // check if the pattern fits on the grid
     if (startRow + pattern.height > rows || startCol + pattern.width > cols) {
       return { success: false, message: 'Pattern would extend beyond grid boundaries' };
     }
 
-    // Place the pattern on the grid
+    // place the pattern on the grid
     for (let i = 0; i < pattern.height; i++) {
       for (let j = 0; j < pattern.width; j++) {
         const rowIndex = startRow + i;
         const colIndex = startCol + j;
         const coordStr = coordToString(rowIndex, colIndex);
 
-        // If the cell in the pattern is alive (1), add it to the grid
+        // if the cell in the pattern is alive (1), add it to the grid
         if (pattern.cells[i][j] === 1) {
           nextActiveCells.add(coordStr);
         } else {
-          // If we want to clear cells where the pattern is placed
+          // if we want to clear cells where the pattern is placed
           nextActiveCells.delete(coordStr);
         }
       }

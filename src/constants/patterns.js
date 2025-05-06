@@ -1,3 +1,4 @@
+// known patterns
 export const PATTERNS = {
   glider: {
     name: 'Glider',
