@@ -27,8 +27,7 @@ const AnimationControls = () => {
             className="w-24 mb-0"
             min={5}
             max={1000}
-
-            step={10}
+            step={5}
             value={intervalInput}
             onChange={handleIntervalChange}
             tooltip={{ formatter: (value) => `${value}ms` }}
