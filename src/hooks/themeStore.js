@@ -1,7 +1,9 @@
 import { create } from 'zustand';
 import { DEFAULT_COLORS } from './constants';
 
-// Initialize theme from localStorage if available
+const getDefaultColorsObject = () =>
+  Object.fromEntries(DEFAULT_COLORS.map(({ key, defaultColor }) => [key, defaultColor]));
+
 const getSavedTheme = () => {
   try {
     const saved = localStorage.getItem('gameOfLifeTheme');
@@ -12,16 +14,15 @@ const getSavedTheme = () => {
     console.warn('Failed to load theme from localStorage:', error);
   }
 
-  return { ...DEFAULT_COLORS };
+  return { ...getDefaultColorsObject() };
 };
 
 export const useThemeStore = create((set) => ({
-  // State
   theme: getSavedTheme(),
 
-  // Methods
   updateColor: (colorKey, newColor) => {
-    if (DEFAULT_COLORS.hasOwnProperty(colorKey)) {
+    const defaultColorsObj = getDefaultColorsObject();
+    if (defaultColorsObj.hasOwnProperty(colorKey)) {
       set((state) => {
         const newTheme = {
           ...state.theme,
@@ -37,7 +38,7 @@ export const useThemeStore = create((set) => ({
   },
 
   resetTheme: () => {
-    const defaultTheme = { ...DEFAULT_COLORS };
+    const defaultTheme = { ...getDefaultColorsObject() };
     localStorage.setItem('gameOfLifeTheme', JSON.stringify(defaultTheme));
     set({ theme: defaultTheme });
   },
@@ -45,7 +46,7 @@ export const useThemeStore = create((set) => ({
   setFullTheme: (newTheme) => {
     // Ensure all required colors are present
     const completeTheme = {
-      ...DEFAULT_COLORS,
+      ...getDefaultColorsObject(),
       ...newTheme,
     };
     localStorage.setItem('gameOfLifeTheme', JSON.stringify(completeTheme));

@@ -1,9 +1,5 @@
 import { useThemeStore } from './themeStore';
 
-/**
- * Custom hook to manage Game of Life theme colors
- * @returns {Object} Theme state and methods
- */
 export const useGameOfLifeTheme = () => {
   const store = useThemeStore();
 

@@ -44,17 +44,19 @@ const Patterns = () => {
   ));
 
   return (
-    <div className="w-full max-w-xl max-h-screen p-4 overflow-auto bg-white border border-gray-200 rounded-lg shadow-md">
-      <div className='flex items-center justify-between mb-4'>
+    <div className="relative w-full h-[75vh] p-4 overflow-auto bg-white border-2 border-gray-200 rounded-lg">
+      <div className='flex flex-col items-center justify-between mb-4'>
         <Title level={4} className="mb-0">Pattern Library</Title>
         <Tooltip title="Upload Image Pattern">
           <Button
-            size='large'
+            size='small'
             icon={<FaRegImage />}
             onClick={() => setIsImagePatternModalOpen(true)}
-            type="link"
+            type=""
             aria-label="Upload Image Pattern"
-          />
+          >
+            Upload Image
+          </Button>
         </Tooltip>
       </div>
       <Text className="block mb-4 text-sm text-gray-500">
@@ -79,12 +81,11 @@ const Patterns = () => {
               onDragStart={(e) => handleDragStart(e, pattern)}
             >
               <div className="flex items-center gap-3">
-                <div className="flex items-center justify-center flex-shrink-0 w-16 h-16 border border-gray-200">
+                <div className="flex items-center justify-center flex-shrink-0 w-16 h-16">
                   <PatternPreview
                     cells={pattern.cells}
                     containerWidth={64}
                     containerHeight={64}
-                    aliveColor="#4682B4"
                   />
                 </div>
                 <div className="flex-grow text-start">

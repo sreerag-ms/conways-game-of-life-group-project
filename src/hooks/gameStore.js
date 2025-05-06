@@ -45,11 +45,9 @@ export const useGameStore = create((set, get) => ({
             newRow = (row + i + rows) % rows;
             newCol = (col + j + cols) % cols;
           } else {
-            // No wrapping (non-continuous)
             newRow = row + i;
             newCol = col + j;
 
-            // Skip if outside grid boundaries
             if (newRow < 0 || newRow >= rows || newCol < 0 || newCol >= cols) {
               continue;
             }

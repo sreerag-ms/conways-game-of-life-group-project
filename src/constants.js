@@ -1,3 +1,5 @@
+export const PRIMARY_COLOR = '#127475';
+
 export const ANTD_THEME = {
   token: {
     colorPrimary: '#127475',

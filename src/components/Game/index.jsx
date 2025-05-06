@@ -5,7 +5,7 @@ import GridSection from './GridSection';
 import SimulationControls from './SimulationControls';
 
 const Game = ({ setStabilizedModalOpen }) => (
-  <Content className="p-3 md:p-6 lg:p-12 bg-gradient-to-b from-gray-50 to-gray-100">
+  <Content className="p-3 md:p-6 lg:p-12">
     <SimulationControls />
 
     <div className="pb-4 overflow-auto">
