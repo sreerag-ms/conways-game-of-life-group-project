@@ -405,6 +405,21 @@ export const PATTERNS = {
       [0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0],
     ],
   },
+
+  highLifeReplicator: {
+    name: 'HighLife Replicator',
+    description: 'A 6-cell pattern that self-replicates every 12 generations in HighLife (B36/S23)',
+    width: 5,
+    height: 5,
+    cells: [
+      [0, 0, 1, 1, 1],
+      [0, 1, 0, 0, 1],
+      [1, 0, 0, 0, 1],
+      [1, 0, 0, 1, 0],
+      [1, 1, 1, 0, 0],
+    ],
+  },
+
   // {
   //   name: 'Gosper Breeder',
   //   description: '…',
