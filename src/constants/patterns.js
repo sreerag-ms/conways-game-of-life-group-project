@@ -336,4 +336,11 @@ export const PATTERNS = {
       [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0],
     ],
   },
+  // {
+  //   name: 'Gosper Breeder',
+  //   description: '…',
+  //   width: 129,
+  //   height: 94,
+  //   cells:
+  // }
 };

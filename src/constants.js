@@ -1,3 +1,5 @@
+export const PRIMARY_COLOR = '#127475';
+
 export const ANTD_THEME = {
   token: {
     colorPrimary: '#127475',
@@ -27,7 +29,7 @@ export const ANTD_THEME = {
 
     colorBgContainer: '#ffffff',
     colorBgElevated: '#ffffff',
-    colorBgLayout: '#f5f7fa',
+    colorBgLayout: '#ffffff',
 
     controlItemBgActive: '#e6f0f0',
     controlItemBgActiveHover: '#d1e6e6',
@@ -51,7 +53,7 @@ export const ANTD_THEME = {
       colorPrimary: '#127475',
       colorPrimaryHover: '#0e5a5b',
       colorPrimaryActive: '#0a4748',
-      defaultBg: '#f5f7fa',
+      defaultBg: '#ffffff',
       defaultColor: '#127475',
       defaultBorderColor: '#d0dee7',
     },
@@ -93,9 +95,9 @@ export const ANTD_THEME = {
       labelColor: '#546e7a',
     },
     Slider: {
-      trackBg: '#d1e6e6',
-      trackHoverBg: '#b0dddd',
-      railBg: '#e1ebf0',
+      trackBg: '#2cb6b6',
+      trackHoverBg: '#e3f6f6',
+      railBg: '#5bc6c6',
       handleColor: '#127475',
       handleActiveColor: '#0e5a5b',
     },

@@ -1,20 +1,21 @@
-import { Modal } from 'antd';
-import PropTypes from 'prop-types';
-import React, { useEffect, useState } from 'react';
+import { DownloadOutlined } from '@ant-design/icons';
+import { Button, Modal } from 'antd';
 import {
-  Chart as ChartJS,
   CategoryScale,
+  Chart as ChartJS,
+  Filler,
+  Legend,
   LinearScale,
-  PointElement,
   LineElement,
+  PointElement,
   Title,
   Tooltip,
-  Legend,
-  Filler,
 } from 'chart.js';
+import PropTypes from 'prop-types';
+import React, { useEffect, useState } from 'react';
 import { Line } from 'react-chartjs-2';
+import { useSimulationControls } from '../../hooks/useSimulationControls';
 
-// Register ChartJS components
 ChartJS.register(
   CategoryScale,
   LinearScale,
@@ -26,11 +27,19 @@ ChartJS.register(
   Filler,
 );
 
-const ChartModal = ({ isVisible, onClose, metrics }) => {
+const ChartModal = ({ isVisible, onClose, getMetrics }) => {
+  const [metrics, setMetrics] = useState([]);
   const [chartData, setChartData] = useState({
     labels: [],
     datasets: [],
   });
+  const { exportData } = useSimulationControls();
+
+  useEffect(() => {
+    if (getMetrics && isVisible){
+      setMetrics(getMetrics());
+    }
+  }, [isVisible, getMetrics]);
 
   useEffect(() => {
     if (metrics && metrics.length > 0) {
@@ -141,12 +150,14 @@ const ChartModal = ({ isVisible, onClose, metrics }) => {
 
   return (
     <Modal
-      title="Population Metrics"
+      title={
+        <span>Population Metrics</span>
+      }
       open={isVisible}
       onCancel={onClose}
       width={800}
       footer={null}
-      bodyStyle={{ 
+      bodyStyle={{
         padding: '20px',
         backgroundColor: '#fff',
       }}
@@ -160,6 +171,18 @@ const ChartModal = ({ isVisible, onClose, metrics }) => {
           </div>
         )}
       </div>
+      <div className="flex items-center justify-end w-full gap-5">
+        <Button
+          className="rounded-lg"
+          type="default"
+          icon={<DownloadOutlined />}
+          size="small"
+          onClick={exportData}
+        >
+            Download CSV
+        </Button>
+
+      </div>
     </Modal>
   );
 };
@@ -167,12 +190,7 @@ const ChartModal = ({ isVisible, onClose, metrics }) => {
 ChartModal.propTypes = {
   isVisible: PropTypes.bool.isRequired,
   onClose: PropTypes.func.isRequired,
-  metrics: PropTypes.arrayOf(PropTypes.shape({
-    generation: PropTypes.number.isRequired,
-    populationSize: PropTypes.number.isRequired,
-    births: PropTypes.number.isRequired,
-    deaths: PropTypes.number.isRequired,
-  })).isRequired,
+  getMetrics: PropTypes.func.isRequired,
 };
 
 export default ChartModal;

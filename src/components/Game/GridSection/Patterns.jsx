@@ -1,7 +1,9 @@
-import { Card, Input, Typography } from 'antd';
+import { Button, Card, Input, Tooltip, Typography } from 'antd';
 import React, { useRef, useState } from 'react';
+import { FaRegImage } from 'react-icons/fa';
 import { PATTERNS } from '../../../constants/patterns';
 import { createPatternHtml } from '../../../utils/patterns';
+import ImagePatternModal from '../../modals/ImagePatternModal';
 import PatternPreview from './PatternPreview';
 
 const { Title, Text } = Typography;
@@ -10,6 +12,7 @@ const { Search } = Input;
 const Patterns = () => {
   const dragPreviewsRef = useRef({});
   const [searchTerm, setSearchTerm] = useState('');
+  const [isImagePatternModalOpen, setIsImagePatternModalOpen] = useState(false);
 
   const handleDragStart = (e, pattern) => {
     e.dataTransfer.setData('application/json', JSON.stringify(pattern));
@@ -41,8 +44,21 @@ const Patterns = () => {
   ));
 
   return (
-    <div className="w-full max-w-xl max-h-screen p-4 overflow-auto bg-white border border-gray-200 rounded-lg shadow-md">
-      <Title level={4} className="mb-4">Pattern Library</Title>
+    <div className="relative w-full h-[72vh] p-4 overflow-auto bg-white border-2 border-gray-200 rounded-lg">
+      <div className='flex flex-col items-center justify-between mb-4'>
+        <Title level={4} className="mb-0">Pattern Library</Title>
+        <Tooltip title="Upload Image Pattern">
+          <Button
+            size='small'
+            icon={<FaRegImage />}
+            onClick={() => setIsImagePatternModalOpen(true)}
+            type=""
+            aria-label="Upload Image Pattern"
+          >
+            Upload Image
+          </Button>
+        </Tooltip>
+      </div>
       <Text className="block mb-4 text-sm text-gray-500">
         Drag and drop these patterns to the grid
       </Text>
@@ -65,12 +81,11 @@ const Patterns = () => {
               onDragStart={(e) => handleDragStart(e, pattern)}
             >
               <div className="flex items-center gap-3">
-                <div className="flex items-center justify-center flex-shrink-0 w-16 h-16 border border-gray-200">
+                <div className="flex items-center justify-center flex-shrink-0 w-16 h-16">
                   <PatternPreview
                     cells={pattern.cells}
                     containerWidth={64}
                     containerHeight={64}
-                    aliveColor="#4682B4"
                   />
                 </div>
                 <div className="flex-grow text-start">
@@ -86,6 +101,10 @@ const Patterns = () => {
           </div>
         )}
       </div>
+      <ImagePatternModal
+        isVisible={isImagePatternModalOpen}
+        onClose={() => setIsImagePatternModalOpen(false)}
+      />
     </div>
   );
 };

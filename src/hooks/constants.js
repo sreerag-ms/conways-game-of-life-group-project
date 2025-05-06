@@ -1,9 +1,9 @@
-export const DEFAULT_COLORS = {
-  alive: '#4682B4',   // gray-400
-  dead: '#ffffff',    // white
-  born: '#DAFFCB',    // blue-400
-  die: '#f87171',     // red-400
-};
+export const DEFAULT_COLORS  = [
+  { key: 'alive', label: 'Alive Cells', defaultColor: '#e7e7e7' },
+  { key: 'dead', label: 'Dead Cells', defaultColor: '#282828' },
+  { key: 'born', label: 'Born Cells (Will appear)', defaultColor: '#DAFFCB' },
+  { key: 'die', label: 'Dying Cells (Will disappear)', defaultColor: '#f87171' },
+];
 
 // Default grid dimensions
 export const DEFAULT_ROWS = 20;

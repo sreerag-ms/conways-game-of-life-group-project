@@ -1,7 +1,6 @@
 import { create } from 'zustand';
 import { DEFAULT_COLS, DEFAULT_ROWS, DEFAULT_SIMULATION_SPEED, RULES } from './constants';
 
-// Helper to convert between representations
 const coordToString = (row, col) => `${row},${col}`;
 const stringToCoord = (str) => str.split(',').map(Number);
 
@@ -21,6 +20,7 @@ export const useGameStore = create((set, get) => ({
   simulationIntervalRef: null,
   metrics: [],
   generation: 0,
+  stabilized: false,
 
   // Methods
   getNextStateSet: () => {
@@ -46,11 +46,9 @@ export const useGameStore = create((set, get) => ({
             newRow = (row + i + rows) % rows;
             newCol = (col + j + cols) % cols;
           } else {
-            // No wrapping (non-continuous)
             newRow = row + i;
             newCol = col + j;
 
-            // Skip if outside grid boundaries
             if (newRow < 0 || newRow >= rows || newCol < 0 || newCol >= cols) {
               continue;
             }
@@ -163,7 +161,7 @@ export const useGameStore = create((set, get) => ({
   collectMetrics: () => {
     const { activeCells, bornCells, dyingCells, generation, currentRules } = get();
     const timestamp = new Date().toISOString();
-    
+
     const metrics = {
       timestamp,
       generation,
@@ -192,17 +190,19 @@ export const useGameStore = create((set, get) => ({
     // Check if the grid has stabilized
     const hasStabilized = get().areGridsEqual(activeCells, nextActiveCells);
     if (hasStabilized) {
-      console.log('Grid has stabilized');
+      set({ stabilized: true });
       setTimeout(() => {
         get().stopSimulation();
         if (onStabilize) onStabilize();
       }, 0);
+
       return;
     }
 
-    set(state => ({ 
+    set(state => ({
       activeCells: nextActiveCells,
       generation: state.generation + 1,
+      stabilized: false,
     }));
 
     // Collect metrics after state update
@@ -215,6 +215,7 @@ export const useGameStore = create((set, get) => ({
       rows: rowCount,
       cols: colCount,
       activeCells: new Set(),
+      stabilized: false,
     });
   },
 
@@ -229,15 +230,19 @@ export const useGameStore = create((set, get) => ({
       nextActiveCells.add(coordStr);
     }
 
-    set({ activeCells: nextActiveCells });
+    set({
+      activeCells: nextActiveCells,
+      stabilized: false,
+    });
   },
 
   clearGrid: () => {
     get().stopSimulation();
-    set({ 
+    set({
       activeCells: new Set(),
       generation: 0,
       metrics: [],
+      stabilized: false,
     });
   },
 
@@ -279,6 +284,7 @@ export const useGameStore = create((set, get) => ({
         rows: config.rows || rows,
         cols: config.cols || cols,
         activeCells: new Set(config.cells),
+        stabilized: false,
       });
 
       if (config.rules && RULES[config.rules]) {
@@ -308,6 +314,7 @@ export const useGameStore = create((set, get) => ({
       set({
         simulationIntervalRef: intervalId,
         isRunning: true,
+        stabilized: false,
       });
     }
   },
@@ -392,15 +399,19 @@ export const useGameStore = create((set, get) => ({
       }
     }
 
-    set({ activeCells: nextActiveCells });
+    set({
+      activeCells: nextActiveCells,
+      stabilized: false,
+    });
 
     return { success: true };
   },
 
+  getMetrics: () => get().metrics,
+
   exportData: () => {
     const { metrics } = get();
-    
-    // Create CSV content
+
     const headers = ['Timestamp', 'Generation', 'Population Size', 'Births', 'Deaths', 'Rule Set'];
     const rows = metrics.map(m => [
       m.timestamp,
@@ -413,10 +424,9 @@ export const useGameStore = create((set, get) => ({
 
     const csvContent = [
       headers.join(','),
-      ...rows.map(row => row.join(','))
+      ...rows.map(row => row.join(',')),
     ].join('\n');
 
-    // Create and download the file
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement('a');
     link.href = URL.createObjectURL(blob);
@@ -424,5 +434,11 @@ export const useGameStore = create((set, get) => ({
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+  },
+
+  getGridDimensions: () => {
+    const { rows, cols } = get();
+
+    return { rows, cols };
   },
 }));

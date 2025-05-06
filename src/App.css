@@ -80,3 +80,13 @@
 .cell.alive {
   animation: fade-in 0.2s ease-in;
 }
+
+
+
+.secondary-bg {
+  background-color: #b9e6e6 !important;
+}
+
+.primary-text {
+  color: #127475 !important;
+}

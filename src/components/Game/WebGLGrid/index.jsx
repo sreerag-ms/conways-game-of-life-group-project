@@ -1,11 +1,12 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { useCanvasStore } from '../../../hooks/canvasStore';
 import { useGameOfLife } from '../../../hooks/useGameOfLife';
 import { useGameOfLifeTheme } from '../../../hooks/useGameOfLifeTheme';
 import { FRAGMENT_SHADER_SOURCE, VERTEX_SHADER_SOURCE } from './constants';
 import { hexToRgb } from './utils';
 
-const WebGLGrid = ({ cellSize = 15 }) => {
-  // Get values from hooks instead of props
+const WebGLGrid = ({ cellSize = 15, setStabilizedModalOpen }) => {
+
   const {
     activeCells,
     rows,
@@ -14,10 +15,24 @@ const WebGLGrid = ({ cellSize = 15 }) => {
     dyingCells,
     showChanges,
     toggleCell,
-    placePattern, // Add this from useGameOfLife
+    placePattern,
+    createGrid,
+    generation,
+    stabilized,
   } = useGameOfLife();
 
   const { theme } = useGameOfLifeTheme();
+
+  const {
+    zoom,
+    panOffset,
+    activeTool,
+    isDragging,
+    setIsDragging,
+    dragStart,
+    setDragStart,
+    updatePanOffset,
+  } = useCanvasStore();
 
   const canvasRef = useRef(null);
   const containerRef = useRef(null);
@@ -28,20 +43,40 @@ const WebGLGrid = ({ cellSize = 15 }) => {
   const canvasWidth = useRef(0);
   const canvasHeight = useRef(0);
 
-  // Set default grid visibility to true without UI control
-  const [showGrid, setShowGrid] = useState(true);
-  const [gridColor, setGridColor] = useState({ r: 0, g: 0, b: 0, a: 0.5 });
   const [hoveredCell, setHoveredCell] = useState({ row: -1, col: -1 });
 
-  // Calculate responsive cell size
+  useEffect(() => {
+    createGrid(50, 50);
+  }, [createGrid]);
+
   useEffect(() => {
     const calculateCellSize = () => {
-      const containerWidth = window.innerWidth > 768
-        ? Math.min(window.innerWidth - 100, 800) : window.innerWidth - 40;
-      const gridWidth = cols || 20;
-      const optimalSize = Math.floor(containerWidth / gridWidth);
+      // Use the same dimensions as the container in the render method
+      const containerWidth = 800;
+      const containerHeight = 500;
 
-      return Math.max(4, Math.min(optimalSize, cellSize));
+      const maxCellWidth = Math.floor(containerWidth / cols);
+      const maxCellHeight = Math.floor(containerHeight / rows);
+
+      let optimalSize = Math.min(maxCellWidth, maxCellHeight);
+
+      if (rows <= 10 && cols <= 10) {
+        optimalSize = Math.min(50, optimalSize);
+      } else if (rows <= 20 && cols <= 20) {
+        optimalSize = Math.min(35, optimalSize);
+      } else if (rows <= 30 && cols <= 30) {
+        optimalSize = Math.min(30, optimalSize);
+      } else if (rows <= 50 && cols <= 50) {
+        optimalSize = Math.min(25, optimalSize);
+      } else if (rows <= 75 && cols <= 75) {
+        optimalSize = Math.min(15, optimalSize);
+      } else if (rows <= 100 && cols <= 100) {
+        optimalSize = Math.min(12, optimalSize);
+      } else if (rows <= 150 && cols <= 150) {
+        optimalSize = Math.min(8, optimalSize);
+      }
+
+      return Math.max(4, optimalSize);
     };
 
     setResponsiveCellSize(calculateCellSize());
@@ -53,7 +88,7 @@ const WebGLGrid = ({ cellSize = 15 }) => {
     window.addEventListener('resize', handleResize);
 
     return () => window.removeEventListener('resize', handleResize);
-  }, [cols, cellSize]);
+  }, [rows, cols, cellSize]);
 
   // Set up WebGL context
   useEffect(() => {
@@ -62,8 +97,6 @@ const WebGLGrid = ({ cellSize = 15 }) => {
 
     const gl = canvas.getContext('webgl', { antialias: false });
     if (!gl) {
-      console.error('WebGL not supported');
-
       return;
     }
 
@@ -105,9 +138,7 @@ const WebGLGrid = ({ cellSize = 15 }) => {
         cells: gl.getUniformLocation(program, 'u_cells'),
         aliveColor: gl.getUniformLocation(program, 'u_aliveColor'),
         deadColor: gl.getUniformLocation(program, 'u_deadColor'),
-        gridColor: gl.getUniformLocation(program, 'u_gridColor'),
         gridSize: gl.getUniformLocation(program, 'u_gridSize'),
-        showGrid: gl.getUniformLocation(program, 'u_showGrid'),
         hoveredCell: gl.getUniformLocation(program, 'u_hoveredCell'),
         showHoverEffect: gl.getUniformLocation(program, 'u_showHoverEffect'),
         showChanges: gl.getUniformLocation(program, 'u_showChanges'),
@@ -148,7 +179,7 @@ const WebGLGrid = ({ cellSize = 15 }) => {
     gl.viewport(0, 0, width, height);
 
     render();
-  }, [rows, cols, responsiveCellSize, activeCells, bornCells, dyingCells, showGrid, gridColor, hoveredCell, showChanges, theme]);
+  }, [rows, cols, responsiveCellSize, activeCells, bornCells, dyingCells, hoveredCell, showChanges, theme]);
 
   // Render cells
   const render = useCallback(() => {
@@ -219,17 +250,7 @@ const WebGLGrid = ({ cellSize = 15 }) => {
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
-    gl.texImage2D(
-      gl.TEXTURE_2D,
-      0,
-      gl.RGBA,
-      width,
-      height,
-      0,
-      gl.RGBA,
-      gl.UNSIGNED_BYTE,
-      cellsData,
-    );
+    gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,width,height,0,gl.RGBA,gl.UNSIGNED_BYTE,cellsData);
 
     gl.useProgram(program.program);
 
@@ -237,7 +258,6 @@ const WebGLGrid = ({ cellSize = 15 }) => {
     gl.uniform2f(program.uniformLocations.resolution, canvasWidth.current, canvasHeight.current);
     gl.uniform1f(program.uniformLocations.cellSize, responsiveCellSize);
     gl.uniform2f(program.uniformLocations.gridSize, cols, rows);
-    gl.uniform1i(program.uniformLocations.showGrid, showGrid ? 1 : 0);
     gl.uniform2f(program.uniformLocations.hoveredCell, hoveredCell.col, hoveredCell.row);
     gl.uniform1i(program.uniformLocations.showHoverEffect, hoveredCell.row >= 0 && hoveredCell.col >= 0 ? 1 : 0);
     gl.uniform1i(program.uniformLocations.showChanges, showChanges ? 1 : 0);
@@ -252,7 +272,6 @@ const WebGLGrid = ({ cellSize = 15 }) => {
     gl.uniform4f(program.uniformLocations.deadColor, deadColor.r, deadColor.g, deadColor.b, 1.0);
     gl.uniform4f(program.uniformLocations.bornColor, bornColor.r, bornColor.g, bornColor.b, 1.0);
     gl.uniform4f(program.uniformLocations.dieColor, dieColor.r, dieColor.g, dieColor.b, 1.0);
-    gl.uniform4f(program.uniformLocations.gridColor, gridColor.r, gridColor.g, gridColor.b, gridColor.a);
     gl.uniform1i(program.uniformLocations.cells, 0);
 
     // Set attributes
@@ -268,44 +287,81 @@ const WebGLGrid = ({ cellSize = 15 }) => {
     gl.clearColor(0.9, 0.9, 0.9, 1.0);
     gl.clear(gl.COLOR_BUFFER_BIT);
     gl.drawArrays(gl.TRIANGLES, 0, 6);
-  }, [cols, rows, activeCells, bornCells, dyingCells, responsiveCellSize, showGrid, showChanges, gridColor, hoveredCell, theme]);
+  }, [cols, rows, activeCells, bornCells, dyingCells, responsiveCellSize, showChanges, hoveredCell, theme]);
+
+  // Convert screen coordinates to cell coordinates, accounting for zoom and pan
+  const screenToGridCoordinates = useCallback((screenX, screenY) => {
+    const canvas = canvasRef.current;
+    if (!canvas) return { row: -1, col: -1 };
+
+    const rect = canvas.getBoundingClientRect();
+
+    const x = (screenX - rect.left) / zoom;
+    const y = (screenY - rect.top) / zoom;
+
+    const col = Math.floor(x / responsiveCellSize);
+    const row = Math.floor(y / responsiveCellSize);
+
+    return { row, col };
+  }, [zoom, panOffset, responsiveCellSize]);
 
   // Mouse event handlers
   const handleMouseMove = useCallback((event) => {
     const canvas = canvasRef.current;
-    const rect = canvas.getBoundingClientRect();
+    if (!canvas) return;
 
-    const mouseX = event.clientX - rect.left;
-    const mouseY = event.clientY - rect.top;
-
-    const col = Math.floor(mouseX / responsiveCellSize);
-    const row = Math.floor(mouseY / responsiveCellSize);
-
-    if (row >= 0 && row < rows && col >= 0 && col < cols) {
-      setHoveredCell({ row, col });
+    if (isDragging && activeTool === 'hand') {
+      // Handle panning
+      const deltaX = event.clientX - dragStart.x;
+      const deltaY = event.clientY - dragStart.y;
+      updatePanOffset(deltaX, deltaY);
+      setDragStart(event.clientX, event.clientY);
     } else {
-      setHoveredCell({ row: -1, col: -1 });
+      // Handle cell hovering
+      const { row, col } = screenToGridCoordinates(event.clientX, event.clientY);
+
+      if (row >= 0 && row < rows && col >= 0 && col < cols) {
+        setHoveredCell({ row, col });
+      } else {
+        setHoveredCell({ row: -1, col: -1 });
+      }
     }
-  }, [responsiveCellSize, rows, cols]);
+  }, [activeTool, dragStart, isDragging, rows, cols, updatePanOffset, setDragStart, screenToGridCoordinates]);
+
+  const handleMouseDown = useCallback((event) => {
+    if (activeTool === 'hand') {
+      setIsDragging(true);
+      setDragStart(event.clientX, event.clientY);
+      canvasRef.current.style.cursor = 'grabbing';
+    }
+  }, [activeTool, setIsDragging, setDragStart]);
+
+  const handleMouseUp = useCallback((event) => {
+    if (isDragging) {
+      setIsDragging(false);
+      if (activeTool === 'hand') {
+        canvasRef.current.style.cursor = 'grab';
+      }
+    }
+  }, [isDragging, activeTool, setIsDragging]);
 
   const handleMouseLeave = useCallback(() => {
     setHoveredCell({ row: -1, col: -1 });
-  }, []);
+    if (isDragging) {
+      setIsDragging(false);
+    }
+  }, [isDragging, setIsDragging]);
 
   const handleCanvasClick = useCallback((event) => {
-    const canvas = canvasRef.current;
-    const rect = canvas.getBoundingClientRect();
+    // Only handle cell clicking when using the mouse tool
+    if (activeTool !== 'mouse' || isDragging) return;
 
-    const mouseX = event.clientX - rect.left;
-    const mouseY = event.clientY - rect.top;
-
-    const col = Math.floor(mouseX / responsiveCellSize);
-    const row = Math.floor(mouseY / responsiveCellSize);
+    const { row, col } = screenToGridCoordinates(event.clientX, event.clientY);
 
     if (row >= 0 && row < rows && col >= 0 && col < cols) {
       toggleCell(row, col);
     }
-  }, [rows, cols, toggleCell, responsiveCellSize]);
+  }, [activeTool, isDragging, toggleCell, rows, cols, screenToGridCoordinates]);
 
   // Handle drag over event to indicate valid drop target
   const handleDragOver = useCallback((event) => {
@@ -327,21 +383,15 @@ const WebGLGrid = ({ cellSize = 15 }) => {
         return;
       }
 
-      // Calculate the drop position in grid coordinates
-      const canvas = canvasRef.current;
-      const rect = canvas.getBoundingClientRect();
-      const mouseX = event.clientX - rect.left;
-      const mouseY = event.clientY - rect.top;
-
-      const col = Math.floor(mouseX / responsiveCellSize);
-      const row = Math.floor(mouseY / responsiveCellSize);
+      // Calculate drop position using our helper function
+      const { row, col } = screenToGridCoordinates(event.clientX, event.clientY);
 
       // Place the pattern at the drop position
       placePattern(patternData, row, col);
     } catch (error) {
       console.error('Error handling pattern drop:', error);
     }
-  }, [placePattern, responsiveCellSize]);
+  }, [placePattern, screenToGridCoordinates]);
 
   // WebGL helpers
   const createShader = (gl, type, source) => {
@@ -376,40 +426,98 @@ const WebGLGrid = ({ cellSize = 15 }) => {
     return program;
   };
 
+  // Set cursor style based on active tool
+  useEffect(() => {
+    if (canvasRef.current) {
+      canvasRef.current.style.cursor = activeTool === 'hand'
+        ? (isDragging ? 'grabbing' : 'grab')
+        : 'pointer';
+    }
+  }, [activeTool, isDragging]);
+
   // Set up mouse event listeners
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
 
     canvas.addEventListener('mousemove', handleMouseMove);
+    canvas.addEventListener('mousedown', handleMouseDown);
+    canvas.addEventListener('mouseup', handleMouseUp);
     canvas.addEventListener('mouseleave', handleMouseLeave);
     canvas.addEventListener('dragover', handleDragOver);
     canvas.addEventListener('drop', handleDrop);
 
     return () => {
       canvas.removeEventListener('mousemove', handleMouseMove);
+      canvas.removeEventListener('mousedown', handleMouseDown);
+      canvas.removeEventListener('mouseup', handleMouseUp);
       canvas.removeEventListener('mouseleave', handleMouseLeave);
       canvas.removeEventListener('dragover', handleDragOver);
       canvas.removeEventListener('drop', handleDrop);
     };
-  }, [handleMouseMove, handleMouseLeave, handleDragOver, handleDrop]);
+  }, [handleMouseMove, handleMouseDown, handleMouseUp, handleMouseLeave, handleDragOver, handleDrop]);
+
+  // Calculate if grid should be centered (add this before the return statement)
+  const gridWidth = cols * responsiveCellSize;
+  const gridHeight = rows * responsiveCellSize;
+  const containerWidth = 800;
+  const containerHeight = 500;
+  const centerX = gridWidth < containerWidth ? (containerWidth - gridWidth) / 2 : 0;
+  const centerY = gridHeight < containerHeight ? (containerHeight - gridHeight) / 2 : 0;
 
   return (
     <div className="flex flex-col items-center w-full rounded-lg" ref={containerRef}>
-      <div className="flex items-center justify-center w-full overflow-auto border border-gray-300 rounded-lg">
-        <canvas
-          ref={canvasRef}
-          className="cursor-pointer"
-          onClick={handleCanvasClick}
+      <div className="relative flex items-center justify-center w-full overflow-hidden border-gray-300 rounded-lg"
+        style={{
+          width: '800px', // Fixed width
+          height: '500px', // Fixed height
+          maxWidth: '100%', // Responsive on small screens
+        }}>
+        <div
+          className='bg-gray-100'
           style={{
-            width: `${cols * responsiveCellSize}px`,
-            height: `${rows * responsiveCellSize}px`,
+            width: '100%',
+            height: '100%',
+            overflow: 'auto',
+            position: 'relative',
           }}
-        />
+        >
+          <div
+            style={{
+              transform: `scale(${zoom}) translate(${panOffset.x / zoom}px, ${panOffset.y / zoom}px)`,
+              transformOrigin: '0 0',
+              position: 'absolute',
+              left: `${centerX}px`,
+              top: `${centerY}px`,
+            }}
+          >
+            <canvas
+              ref={canvasRef}
+              onClick={handleCanvasClick}
+              className='border border-gray-300 rounded-lg'
+              style={{
+                width: `${cols * responsiveCellSize}px`,
+                height: `${rows * responsiveCellSize}px`,
+              }}
+            />
+          </div>
+        </div>
+        <div
+          className="absolute px-3 py-1 font-semibold text-black rounded bg-slate-100 bg-opacity-30"
+          style={{
+            bottom: 5,
+            right: 5,
+            fontSize: '0.7rem',
+            fontWeight: 'normal',
+            zIndex: 10,
+            backgroundColor: 'rgba(250, 250, 250, 0.6)',
+          }}
+        >
+              Generation: {generation}
+        </div>
       </div>
     </div>
   );
 };
 
-// Since we're using hooks for state, we don't need the complex memo comparison
 export default WebGLGrid;
