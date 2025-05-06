@@ -5,9 +5,9 @@ export const DEFAULT_COLORS  = [
   { key: 'die', label: 'Dying Cells (Will disappear)', defaultColor: '#f87171' },
 ];
 
-// Default grid dimensions
-export const DEFAULT_ROWS = 20;
-export const DEFAULT_COLS = 20;
+// default grid dimensions
+export const DEFAULT_ROWS = 50;
+export const DEFAULT_COLS = 50;
 
 // Default simulation settings
 export const DEFAULT_SIMULATION_SPEED = 100;

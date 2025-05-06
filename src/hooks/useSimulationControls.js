@@ -2,6 +2,7 @@ import { useRef } from 'react';
 import { useShallow } from 'zustand/react/shallow';
 import { useGameStore } from './gameStore';
 
+// TODO: Avoid th use of this hook, use the store directly
 export const useSimulationControls = ({ onStabilize } = {}) => {
   const onStabilizeRef = useRef(onStabilize);
 

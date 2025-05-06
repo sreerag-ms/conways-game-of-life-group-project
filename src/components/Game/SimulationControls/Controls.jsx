@@ -15,6 +15,7 @@ import { useSimulationControls } from '../../../hooks/useSimulationControls';
 import ChartModal from '../../modals/ChartModal';
 import SettingsModal from '../../modals/SettingsModal';
 
+// controls for simulation actions, settings, and color customization
 const Controls = () => {
 
   const {

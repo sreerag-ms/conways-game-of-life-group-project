@@ -6,11 +6,11 @@ export const gameSettingsValidationSchema = Yup.object().shape({
   rows: Yup.number()
     .required('Rows are required')
     .min(5, 'Minimum 5 rows')
-    .max(1000, 'Maximum 1000 rows'),
+    .max(3000, 'Maximum 3000 rows'),
   cols: Yup.number()
     .required('Columns are required')
     .min(5, 'Minimum 5 columns')
-    .max(1000, 'Maximum 1000 columns'),
+    .max(3000, 'Maximum 3000 columns'),
   isContinuous: Yup.boolean(),
   currentRules: Yup.string().required('Rule set is required'),
 });
