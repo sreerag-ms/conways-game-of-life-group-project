@@ -5,8 +5,8 @@
 - Multiple rule sets beyond the standard Conway rules
 - Pattern library with classic structures
 - Real-time simulation with adjustable speed
-- Data visualization of population metrics
-- Customizable grid colors and appearance
+- Data visualisation of population metrics
+- Customisable grid colours and appearance
 
 
 ## Index
@@ -41,7 +41,7 @@
 
 [https://gameoflife.site/](https://gameoflife.site/)
 
-### Option 2: Run the Pre-built Version Locally (Without using other nodejs)
+### Option 2: Run the Pre-built Version Locally (Without using other Node.js)
 
 For the purpose of this coursework, the build folder has been included in the repository. Run all the commands from the root of the project.
 
@@ -105,7 +105,7 @@ If you encounter any issues:
 
 ### Using local machine
 
-These are the setup instructions without using docker. Run all the commands from the root of the project. 
+These are the setup instructions without using Docker. Run all the commands from the root of the project. 
 
 #### System Requirements
 
@@ -122,7 +122,7 @@ These are the setup instructions without using docker. Run all the commands from
 1. ```sh
    bun install
    ```
-   This will install all required packages defined in the package.json file, including React, Ant Design, TailwindCSS, and other dependenci
+   This will install all required packages defined in the package.json file, including React, Ant Design, TailwindCSS, and other dependencies
 
 2. **Start the development server:**
    ```sh
@@ -167,4 +167,4 @@ Below, we outline the individual and shared contributions to ensure transparency
 - Co‐authored the README, covering setup, running instructions, and sample I/O
 - Performed the final review and editing of code, documentation, and report
 
-All code in this repository is original. External resources and packages (such as React and Zustand) are properly referenced in the report. The package.json file at the repository root, provides a complete list of dependencies used in the project. These packages do not directly contribute to the core simulation logic; they are standard JavaScript and React libraries supporting web development tasks such as state management and UI rendering. The main simulation logic, shared code, and user interface were developed collaboratively, with equal contributions from both authors. This project contains complete source code, along with accompanying documentation. 
+All code in this repository is original. External resources and packages (such as React and Zustand) are properly referenced in the report. The package.json file at the repository root provides a complete list of dependencies used in the project. These packages do not directly contribute to the core simulation logic; they are standard JavaScript and React libraries supporting web development tasks such as state management and UI rendering. The main simulation logic, shared code, and user interface were developed collaboratively, with equal contributions from both authors. This project contains complete source code, along with accompanying documentation. 
