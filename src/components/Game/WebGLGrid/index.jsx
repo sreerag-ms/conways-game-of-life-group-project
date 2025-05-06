@@ -74,9 +74,15 @@ const WebGLGrid = ({ cellSize = 15, setStabilizedModalOpen }) => {
         optimalSize = Math.min(12, optimalSize);
       } else if (rows <= 150 && cols <= 150) {
         optimalSize = Math.min(8, optimalSize);
+      } else if (rows <= 500 && cols <= 500) {
+        optimalSize = Math.min(4, optimalSize);
+      } else if (rows <= 1000 && cols <= 1000) {
+        optimalSize = Math.min(2, optimalSize);
+      } else {
+        optimalSize = 1;
       }
 
-      return Math.max(4, optimalSize);
+      return Math.max(1, optimalSize);
     };
 
     setResponsiveCellSize(calculateCellSize());
@@ -95,9 +101,26 @@ const WebGLGrid = ({ cellSize = 15, setStabilizedModalOpen }) => {
     const canvas = canvasRef.current;
     if (!canvas) return;
 
-    const gl = canvas.getContext('webgl', { antialias: false });
+    // Try to get WebGL2 context first for better performance with large textures
+    let gl = canvas.getContext('webgl2', { antialias: false });
+
+    // Fall back to WebGL1 if WebGL2 is not available
     if (!gl) {
-      return;
+      gl = canvas.getContext('webgl', { antialias: false });
+      if (!gl) {
+        console.error('WebGL not supported');
+
+        return;
+      }
+    }
+
+    // Check maximum texture size
+    const maxTextureSize = gl.getParameter(gl.MAX_TEXTURE_SIZE);
+    console.log(`Maximum texture size supported: ${maxTextureSize}x${maxTextureSize}`);
+
+    // Check if the requested grid size exceeds maximum texture size
+    if (rows > maxTextureSize || cols > maxTextureSize) {
+      console.warn(`Grid size (${cols}x${rows}) exceeds maximum texture size (${maxTextureSize}x${maxTextureSize}). Some cells might not render correctly.`);
     }
 
     rendererRef.current = gl;
@@ -168,8 +191,21 @@ const WebGLGrid = ({ cellSize = 15, setStabilizedModalOpen }) => {
 
     const gl = rendererRef.current;
     const canvas = canvasRef.current;
-    const width = cols * responsiveCellSize;
-    const height = rows * responsiveCellSize;
+
+    let width = cols * responsiveCellSize;
+    let height = rows * responsiveCellSize;
+
+    const MAX_CANVAS_DIMENSION = 16384;
+    if (width > MAX_CANVAS_DIMENSION || height > MAX_CANVAS_DIMENSION) {
+      const aspectRatio = width / height;
+      if (width > height) {
+        width = MAX_CANVAS_DIMENSION;
+        height = Math.floor(width / aspectRatio);
+      } else {
+        height = MAX_CANVAS_DIMENSION;
+        width = Math.floor(height * aspectRatio);
+      }
+    }
 
     canvas.width = width;
     canvas.height = height;
@@ -187,12 +223,21 @@ const WebGLGrid = ({ cellSize = 15, setStabilizedModalOpen }) => {
 
     const gl = rendererRef.current;
     const program = programRef.current;
-    const width = cols;
-    const height = rows;
 
-    const cellsData = new Uint8Array(width * height * 4);
+    const maxTextureSize = gl.getParameter(gl.MAX_TEXTURE_SIZE);
+    const width = Math.min(cols, maxTextureSize);
+    const height = Math.min(rows, maxTextureSize);
 
-    // Initialize all cells
+    let cellsData;
+
+    try {
+      cellsData = new Uint8Array(width * height * 4);
+    } catch (e) {
+      console.error('Failed to allocate memory for cells texture. Try reducing grid size.', e);
+
+      return;
+    }
+
     for (let i = 0; i < cellsData.length; i += 4) {
       cellsData[i] = 0;
       cellsData[i + 1] = 0;
@@ -244,13 +289,19 @@ const WebGLGrid = ({ cellSize = 15, setStabilizedModalOpen }) => {
       right, bottom,
     ]), gl.STATIC_DRAW);
 
-    // Update texture
+    // For large textures, use appropriate levels of detail
+    // and consider texture compression if available
     gl.bindTexture(gl.TEXTURE_2D, cellsTextureRef.current);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
-    gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,width,height,0,gl.RGBA,gl.UNSIGNED_BYTE,cellsData);
+
+    try {
+      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, width, height, 0, gl.RGBA, gl.UNSIGNED_BYTE, cellsData);
+    } catch (e) {
+      console.error('WebGL error while updating texture. Grid might be too large.', e);
+    }
 
     gl.useProgram(program.program);
 
@@ -365,7 +416,7 @@ const WebGLGrid = ({ cellSize = 15, setStabilizedModalOpen }) => {
 
   // Handle drag over event to indicate valid drop target
   const handleDragOver = useCallback((event) => {
-    event.preventDefault(); // Necessary to allow dropping
+    event.preventDefault();
     event.dataTransfer.dropEffect = 'copy';
   }, []);
 
@@ -464,6 +515,13 @@ const WebGLGrid = ({ cellSize = 15, setStabilizedModalOpen }) => {
   const containerHeight = 500;
   const centerX = gridWidth < containerWidth ? (containerWidth - gridWidth) / 2 : 0;
   const centerY = gridHeight < containerHeight ? (containerHeight - gridHeight) / 2 : 0;
+
+  // Add additional warning if grid is extremely large
+  useEffect(() => {
+    if (rows > 3000 || cols > 3000) {
+      console.warn(`Very large grid detected (${cols}x${rows}). Performance may be impacted.`);
+    }
+  }, [rows, cols]);
 
   return (
     <div className="flex flex-col items-center w-full rounded-lg" ref={containerRef}>
