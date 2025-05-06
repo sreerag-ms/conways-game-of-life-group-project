@@ -26,6 +26,9 @@
       - [Installation Steps](#installation-steps)
       - [Running the Application](#running-the-application)
     - [Using docker setup"](#using-docker-setup)
+      - [Running development mode](#development-mode)
+      - [Running production mode](#production-mode)
+      - [Troubleshooting](#troubleshooting)
   - [Statement of contribution](#statement-of-contribution)
     - [Individual Contributions](#individual-contributions)
     - [Shared Contributions](#shared-contributions)
@@ -153,7 +156,6 @@ If you encounter any issues:
 2. Check if ports 5173 and 8080 are available on your machine
 3. Try rebuilding the Docker images with `docker-compose build`
 4. For Docker permission issues on Linux, you might need to run the commands with `sudo`
-
 
 ---
 
