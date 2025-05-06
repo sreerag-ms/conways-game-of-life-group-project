@@ -11,7 +11,7 @@ const SimulationControls = () => (
         className="w-1/3 m-0 text-sm font-semibold tracking-tight text-start text-primary-500 sm:text-xl md:text-xl"
         style={{ lineHeight: 1.1, marginBottom: 0 }}
       >
-        Conway's Game of Life
+        Game of Life
       </Title>
       <div className="flex items-center justify-end w-full">
 

@@ -81,92 +81,93 @@ const SettingsModal = ({
       destroyOnClose
       width={600}
     >
-      <div className="flex flex-col gap-6">
-        <Formik
-          initialValues={initialValues}
-          validationSchema={gameSettingsValidationSchema}
-          onSubmit={handleSubmit}
-        >
-          {({
-            values,
-            errors,
-            touched,
-            handleSubmit,
-            setFieldValue,
-          }) => (
-            <Form layout="vertical" onFinish={handleSubmit}>
-              <div className='flex flex-wrap items-start justify-between gap-4 mt-4 mb-4'>
-                <FormItemWithError label="Rows" name="rows" touched={touched} errors={errors} className="w-1/3">
-                  <InputNumber
-                    min={5}
-                    max={1000}
-                    value={values.rows}
-                    onChange={(value) => setFieldValue('rows', value)}
-                    className="w-full"
+      <Formik
+        initialValues={initialValues}
+        validationSchema={gameSettingsValidationSchema}
+        onSubmit={handleSubmit}
+      >
+        {({
+          values,
+          errors,
+          touched,
+          handleSubmit,
+          setFieldValue,
+        }) => (
+          <Form layout="vertical" onFinish={handleSubmit} className="mb-0">
+            <div className="grid grid-cols-3 gap-4">
+              <FormItemWithError label="Rows" name="rows" touched={touched} errors={errors}>
+                <InputNumber
+                  min={5}
+                  max={1000}
+                  value={values.rows}
+                  onChange={(value) => setFieldValue('rows', value)}
+                  className="w-full"
+                  style={{ width: '100%' }}
+                />
+              </FormItemWithError>
+
+              <FormItemWithError label="Columns" name="cols" touched={touched} errors={errors}>
+                <InputNumber
+                  min={5}
+                  max={1000}
+                  value={values.cols}
+                  onChange={(value) => setFieldValue('cols', value)}
+                  className="w-full"
+                  style={{ width: '100%' }}
+                />
+              </FormItemWithError>
+
+              <Form.Item label="Continuous Grid" className="mb-0">
+                <div className="flex items-center">
+                  <Switch
+                    checked={values.isContinuous}
+                    onChange={(checked) => setFieldValue('isContinuous', checked)}
                   />
-                </FormItemWithError>
-
-                <FormItemWithError label="Columns" name="cols" touched={touched} errors={errors} className="w-1/3">
-                  <InputNumber
-                    min={5}
-                    max={1000}
-                    value={values.cols}
-                    onChange={(value) => setFieldValue('cols', value)}
-                    className="w-full"
-                  />
-                </FormItemWithError>
-
-                <Form.Item label="Continuous Grid" className="w-1/3">
-                  <div className="flex items-center">
-                    <Switch
-                      checked={values.isContinuous}
-                      onChange={(checked) => setFieldValue('isContinuous', checked)}
-                    />
-                    <span className="ml-2 text-xs text-gray-500">
-                      {values.isContinuous ? 'Edges wrap around' : 'Bounded edges'}
-                    </span>
-                  </div>
-                </Form.Item>
-
-                <div className="w-full mt-1 text-xs text-gray-500">
-                  <p>Note: Cell size will automatically adjust based on grid dimensions. Smaller grids will have larger cells.</p>
+                  <span className="ml-2 text-xs text-gray-500">
+                    {values.isContinuous ? 'Edges wrap around' : 'Bounded edges'}
+                  </span>
                 </div>
+              </Form.Item>
+            </div>
 
-                <FormItemWithError label="Rule Set" name="currentRules" touched={touched} errors={errors} className="w-full">
-                  <Select
-                    value={values.currentRules}
-                    onChange={(value) => setFieldValue('currentRules', value)}
-                    className="w-full"
-                  >
-                    {Object.keys(RULES).map(ruleKey => (
-                      <Select.Option key={ruleKey} value={ruleKey}>
-                        {RULES[ruleKey].name} ({ruleKey}) - S: [{RULES[ruleKey].S.join(',')}], B: [{RULES[ruleKey].B.join(',')}]
-                      </Select.Option>
-                    ))}
-                  </Select>
-                  <div className="mt-1 text-xs text-gray-500">
-                    S = Survival conditions, B = Birth conditions
-                  </div>
-                </FormItemWithError>
+            <div className="mb-4 text-xs text-gray-500">
+              <p>Note: Cell size will automatically adjust based on grid dimensions. Smaller grids will have larger cells.</p>
+            </div>
+
+            <FormItemWithError label="Rule Set" name="currentRules" touched={touched} errors={errors}>
+              <Select
+                value={values.currentRules}
+                onChange={(value) => setFieldValue('currentRules', value)}
+                className="w-full"
+              >
+                {Object.keys(RULES).map(ruleKey => (
+                  <Select.Option key={ruleKey} value={ruleKey}>
+                    {RULES[ruleKey].name} ({ruleKey}) - S: [{RULES[ruleKey].S.join(',')}], B: [{RULES[ruleKey].B.join(',')}]
+                  </Select.Option>
+                ))}
+              </Select>
+              <div className="mt-1 text-xs text-gray-500">
+                S = Survival conditions, B = Birth conditions
               </div>
-              <div className="flex justify-between mt-6">
-                <Button
-                  onClick={() => {
-                    clearGrid();
-                    onClose();
-                  }}
-                  danger
-                >
-                  Clear Grid
-                </Button>
-                <Button type="primary" htmlType="submit">
-                  Update Grid
-                </Button>
-              </div>
-            </Form>
-          )}
-        </Formik>
-      </div>
+            </FormItemWithError>
+
+            <div className="flex justify-between pt-2">
+              <Button
+                onClick={() => {
+                  clearGrid();
+                  onClose();
+                }}
+                danger
+              >
+                Clear Grid
+              </Button>
+              <Button type="primary" htmlType="submit">
+                Update Grid
+              </Button>
+            </div>
+          </Form>
+        )}
+      </Formik>
     </Modal>
   );
 };

@@ -44,7 +44,7 @@ const Patterns = () => {
   ));
 
   return (
-    <div className="relative w-full h-[75vh] p-4 overflow-auto bg-white border-2 border-gray-200 rounded-lg">
+    <div className="relative w-full h-[72vh] p-4 overflow-auto bg-white border-2 border-gray-200 rounded-lg">
       <div className='flex flex-col items-center justify-between mb-4'>
         <Title level={4} className="mb-0">Pattern Library</Title>
         <Tooltip title="Upload Image Pattern">
