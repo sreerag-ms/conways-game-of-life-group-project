@@ -51,12 +51,24 @@ const WebGLGrid = ({ cellSize = 15, setStabilizedModalOpen }) => {
 
   useEffect(() => {
     const calculateCellSize = () => {
-      const containerWidth = window.innerWidth > 768
-        ? Math.min(window.innerWidth - 100, 800) : window.innerWidth - 40;
-      const gridWidth = cols || 20;
-      const optimalSize = Math.floor(containerWidth / gridWidth);
 
-      return Math.max(4, Math.min(optimalSize, cellSize));
+      const containerWidth = 600;
+      const containerHeight = 450;
+
+      const maxCellWidth = Math.floor(containerWidth / cols);
+      const maxCellHeight = Math.floor(containerHeight / rows);
+
+      let optimalSize = Math.min(maxCellWidth, maxCellHeight);
+
+      if (rows <= 20 && cols <= 20) {
+        optimalSize = Math.min(30, optimalSize);
+      } else if (rows <= 50 && cols <= 50) {
+        optimalSize = Math.min(20, optimalSize);
+      } else if (rows <= 100 && cols <= 100) {
+        optimalSize = Math.min(10, optimalSize);
+      }
+
+      return Math.max(4, optimalSize);
     };
 
     setResponsiveCellSize(calculateCellSize());
@@ -68,7 +80,7 @@ const WebGLGrid = ({ cellSize = 15, setStabilizedModalOpen }) => {
     window.addEventListener('resize', handleResize);
 
     return () => window.removeEventListener('resize', handleResize);
-  }, [cols, cellSize]);
+  }, [rows, cols, cellSize]);
 
   // Set up WebGL context
   useEffect(() => {
@@ -439,12 +451,17 @@ const WebGLGrid = ({ cellSize = 15, setStabilizedModalOpen }) => {
 
   return (
     <div className="flex flex-col items-center w-full rounded-lg" ref={containerRef}>
-      <div className="relative flex items-center justify-center overflow-auto border-gray-300 rounded-lg w-fit max-h-4/5 ">
+      <div className="relative flex items-center justify-center w-full overflow-hidden border-gray-300 rounded-lg"
+        style={{
+          width: '800px', // Fixed width
+          height: '500px', // Fixed height
+          maxWidth: '100%', // Responsive on small screens
+        }}>
         <div
-          className='bg-gray-500'
+          className='bg-gray-100'
           style={{
-            width: `${cols * responsiveCellSize}px`,
-            height: '70vh',
+            width: '100%',
+            height: '100%',
             overflow: 'auto',
             position: 'relative',
           }}

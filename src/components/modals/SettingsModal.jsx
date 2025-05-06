@@ -128,6 +128,10 @@ const SettingsModal = ({
                   </div>
                 </Form.Item>
 
+                <div className="w-full mt-1 text-xs text-gray-500">
+                  <p>Note: Cell size will automatically adjust based on grid dimensions. Smaller grids will have larger cells.</p>
+                </div>
+
                 <FormItemWithError label="Rule Set" name="currentRules" touched={touched} errors={errors} className="w-full">
                   <Select
                     value={values.currentRules}
