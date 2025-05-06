@@ -1,0 +1,14 @@
+# Files and directories to exclude from Docker build context
+node_modules
+dist
+.git
+.github
+.gitignore
+.vscode
+*.log
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+README.md

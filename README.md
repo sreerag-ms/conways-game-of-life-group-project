@@ -26,6 +26,9 @@
       - [Installation Steps](#installation-steps)
       - [Running the Application](#running-the-application)
     - [Using docker setup"](#using-docker-setup)
+      - [Running development mode](#development-mode)
+      - [Running production mode](#production-mode)
+      - [Troubleshooting](#troubleshooting)
   - [Statement of contribution](#statement-of-contribution)
     - [Individual Contributions](#individual-contributions)
     - [Shared Contributions](#shared-contributions)
@@ -113,6 +116,46 @@ The following is the development setup instructions for the project. Proceed wit
 
 ### Using docker setup"
 
+## Prerequisites
+
+Before you begin, ensure you have the following installed on your machine:
+
+- [Git](https://git-scm.com/downloads)
+- [Docker](https://www.docker.com/products/docker-desktop/)
+- [Docker Compose](https://docs.docker.com/compose/install/) (included with Docker Desktop on Windows and Mac)
+
+### Run with Docker 
+
+The application is containerised using Docker, making it easy to run on any machine without worrying about dependencies.
+
+#### Development Mode
+
+To start the application in development mode with hot reloading:
+
+```bash
+docker-compose up dev
+```
+
+This will start the development server at [http://localhost:5173](http://localhost:5173).
+
+#### Production Mode
+
+To build and run the application in production mode:
+
+```bash
+docker-compose up app
+```
+
+This will serve the optimised production build at [http://localhost:8080](http://localhost:8080).
+
+## Troubleshooting
+
+If you encounter any issues:
+
+1. Make sure Docker is running
+2. Check if ports 5173 and 8080 are available on your machine
+3. Try rebuilding the Docker images with `docker-compose build`
+4. For Docker permission issues on Linux, you might need to run the commands with `sudo`
 
 ---
 
