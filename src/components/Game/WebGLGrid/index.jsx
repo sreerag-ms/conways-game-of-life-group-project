@@ -484,5 +484,4 @@ const WebGLGrid = ({ cellSize = 15, setStabilizedModalOpen }) => {
   );
 };
 
-// Since we're using hooks for state, we don't need the complex memo comparison
 export default WebGLGrid;

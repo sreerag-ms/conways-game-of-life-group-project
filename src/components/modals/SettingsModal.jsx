@@ -3,6 +3,7 @@ import { Formik } from 'formik';
 import PropTypes from 'prop-types';
 import React from 'react';
 import { useShallow } from 'zustand/react/shallow';
+import { useCanvasStore } from '../../hooks/canvasStore';
 import { RULES } from '../../hooks/constants';
 import { useGameStore } from '../../hooks/gameStore';
 import { gameSettingsValidationSchema } from './constants';
@@ -49,6 +50,10 @@ const SettingsModal = ({
       currentRules: state.currentRules,
     })));
 
+  const {
+    resetView,
+  } = useCanvasStore();
+
   const { rows, cols } = getGridDimensions();
 
   const initialValues = {
@@ -63,6 +68,7 @@ const SettingsModal = ({
     createGrid(values.rows, values.cols);
     setContinuousGrid(values.isContinuous);
     changeRules(values.currentRules);
+    resetView();
     onClose();
   };
 

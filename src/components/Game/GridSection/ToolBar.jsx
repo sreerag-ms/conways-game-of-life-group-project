@@ -1,5 +1,5 @@
 import { ReloadOutlined, ZoomInOutlined, ZoomOutOutlined } from '@ant-design/icons';
-import { Button, Slider, Switch, Tooltip } from 'antd';
+import { Button, Tooltip } from 'antd';
 import React, { useState } from 'react';
 import { FaRegHandPaper, FaRegHandPointer } from 'react-icons/fa';
 import { useCanvasStore } from '../../../hooks/canvasStore';
@@ -23,7 +23,7 @@ const ToolBar = () => {
   };
 
   return (
-    <div className="flex flex-wrap items-center justify-between gap-2 px-4">
+    <div className="flex flex-wrap items-center justify-center gap-2 px-4">
       <div className="flex space-x-2">
         <Tooltip title="Selection Tool (Click to toggle cells)">
           <Button
@@ -60,7 +60,7 @@ const ToolBar = () => {
         </Tooltip>
 
       </div>
-
+      {/*
       <div className="flex justify-end">
         <div className="flex items-center space-x-4">
           <div className="flex items-center">
@@ -87,7 +87,7 @@ const ToolBar = () => {
             />
           </div>
         </div>
-      </div>
+      </div> */}
     </div>
   );
 };

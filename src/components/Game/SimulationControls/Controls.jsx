@@ -7,14 +7,13 @@ import {
   SettingOutlined,
   StepForwardOutlined,
 } from '@ant-design/icons';
-import ChartModal from '../../modals/ChartModal';
-import SettingsModal from '../../modals/SettingsModal';
-
 import { Button, ColorPicker, Popover, Tooltip } from 'antd';
 import React, { useState } from 'react';
 import { DEFAULT_COLORS } from '../../../hooks/constants';
 import { useGameOfLifeTheme } from '../../../hooks/useGameOfLifeTheme';
 import { useSimulationControls } from '../../../hooks/useSimulationControls';
+import ChartModal from '../../modals/ChartModal';
+import SettingsModal from '../../modals/SettingsModal';
 
 const Controls = () => {
 
@@ -63,17 +62,16 @@ const Controls = () => {
   );
 
   return (
-    <div className="flex items-center justify-between w-full md:w-1/2">
+    <div className="flex items-center space-x-6 md:w-1/2">
       <Tooltip title={isRunning ? 'Stop Simulation' : 'Start Simulation'}>
         <Button
           type={isRunning ? 'default' : 'primary'}
           danger={isRunning}
           icon={isRunning ? <PauseCircleOutlined /> : <PlayCircleOutlined />}
           onClick={isRunning ? stopSimulation : startSimulation}
-          size="large"
           shape="rounded"
           className="flex items-center justify-center"
-          style={{ width: '100px', height: '48px', fontSize: '20px', borderWidth: '2px' }}
+          style={{ width: '100px', height: '35px', fontSize: '20px', borderWidth: '2px' }}
         >
           {isRunning ? 'Pause' : 'Run'}
         </Button>
@@ -84,10 +82,9 @@ const Controls = () => {
           icon={<StepForwardOutlined />}
           onClick={nextGeneration}
           disabled={isRunning}
-          size="large"
           shape="circle"
           className="flex items-center justify-center"
-          style={{ width: '50px', height: '50px', fontSize: '24px', borderWidth: '2px' }}
+          style={{ width: '40px', height: '40px', fontSize: '16px', borderWidth: '2px' }}
         />
       </Tooltip>
 
@@ -98,7 +95,7 @@ const Controls = () => {
           size="small"
           shape="circle"
           className="flex items-center justify-center"
-          style={{ width: '50px', height: '50px', fontSize: '24px', borderWidth: '2px' }}
+          style={{ width: '40px', height: '40px', fontSize: '16px', borderWidth: '2px' }}
         />
       </Tooltip>
 
@@ -113,10 +110,9 @@ const Controls = () => {
         <Tooltip title="Color Settings">
           <Button
             icon={<BgColorsOutlined />}
-            size="large"
             shape="circle"
             className="flex items-center justify-center"
-            style={{ width: '50px', height: '50px', fontSize: '24px', borderWidth: '2px' }}
+            style={{ width: '40px', height: '40px', fontSize: '16px', borderWidth: '2px' }}
           />
         </Tooltip>
       </Popover>
@@ -126,10 +122,9 @@ const Controls = () => {
           icon={<LineChartOutlined />}
           onClick={() => setChartModalOpen(true)}
           disabled={isRunning}
-          size="large"
           shape="circle"
           className="flex items-center justify-center"
-          style={{ width: '50px', height: '50px', fontSize: '24px', borderWidth: '2px' }}
+          style={{ width: '40px', height: '40px', fontSize: '16px', borderWidth: '2px' }}
         />
       </Tooltip>
 
@@ -137,10 +132,9 @@ const Controls = () => {
         <Button
           icon={<SettingOutlined />}
           onClick={() => setConfigDrawerOpen(true)}
-          size="large"
           shape="circle"
           className="flex items-center justify-center"
-          style={{ width: '50px', height: '50px', fontSize: '24px', borderWidth: '2px' }}
+          style={{ width: '40px', height: '40px', fontSize: '16px', borderWidth: '2px' }}
         />
       </Tooltip>
 

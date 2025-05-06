@@ -8,7 +8,6 @@ export default {
     extend: {
       colors: {
         primary: {
-          DEFAULT: '#127475',
           50: '#e3f6f6',
           100: '#b9e6e6',
           200: '#8ad6d6',
@@ -29,5 +28,16 @@ export default {
       },
     },
   },
+  safelist: [
+    {
+      pattern: /^bg-primary-\d+$/,
+    },
+    {
+      pattern: /^text-primary-\d+$/,
+    },
+    {
+      pattern: /^border-primary-\d+$/,
+    },
+  ],
   plugins: [],
 };
