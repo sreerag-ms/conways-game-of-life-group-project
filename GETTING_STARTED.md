@@ -12,14 +12,8 @@ Before you begin, ensure you have the following installed on your machine:
 
 ## Steps to Run the Application
 
-### 1. Clone the Repository
 
-```bash
-git clone https://github.com/your-username/conways-game-of-life-group-project.git
-cd conways-game-of-life-group-project
-```
-
-### 2. Run with Docker (Recommended)
+### 1. Run with Docker (Recommended)
 
 The application is containerized using Docker, making it easy to run on any machine without worrying about dependencies.
 
@@ -43,7 +37,7 @@ docker-compose up app
 
 This will serve the optimized production build at [http://localhost:8080](http://localhost:8080).
 
-### 3. Alternative: Run Without Docker
+### 2. Alternative: Run Without Docker
 
 If you prefer not to use Docker, you can run the application directly using Bun.
 
