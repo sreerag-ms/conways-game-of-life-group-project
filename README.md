@@ -56,7 +56,7 @@ For the purpose of this coursework, the build folder has been included in the re
 
 **Note for evaluator**
 
-The following is the development setup instructions for the project. Proceed with this only if it is needed to test the applicaiton/make changes to the existing app and test it out.
+The following is the development setup instructions for the project. Proceed with this only if it is needed to test the application/make changes to the existing app and test it out.
 
 
 ### Using docker setup
