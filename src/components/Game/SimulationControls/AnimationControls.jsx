@@ -20,7 +20,7 @@ const AnimationControls = () => {
 
   return (
     <div>
-      <div className="flex items-center space-x-4 ">
+      <div className="flex items-center space-x-4">
         <div className="flex items-center px-2 py-1 rounded-md h-9 secondary-bg">
           <span className="mr-2 text-sm primary-text">Animation delay:</span>
           <Slider
