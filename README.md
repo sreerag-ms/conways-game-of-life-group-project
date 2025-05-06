@@ -55,12 +55,13 @@ For the purpose of this coursework, the build folder has been included in the re
 ## Development Setup
 
 **Note for evaluator**
+
 The following is the development setup instructions for the project. Proceed with this only if it is needed to test the applicaiton/make changes to the existing app and test it out.
 
 
-### Using docker setup"
+### Using docker setup
 
-## Prerequisites
+#### Prerequisites
 
 Before you begin, ensure you have the following installed on your machine:
 
@@ -68,11 +69,11 @@ Before you begin, ensure you have the following installed on your machine:
 - [Docker](https://www.docker.com/products/docker-desktop/)
 - [Docker Compose](https://docs.docker.com/compose/install/) (included with Docker Desktop on Windows and Mac)
 
-### Run with Docker 
+#### Run with Docker 
 
 The application is containerised using Docker, making it easy to run on any machine without worrying about dependencies. Run all the commands from the root of the project.
 
-#### Development Mode
+##### Development Mode
 
 To start the application in development mode with hot reloading:
 
@@ -82,7 +83,7 @@ docker-compose up dev
 
 This will start the development server at [http://localhost:5173](http://localhost:5173).
 
-#### Production Mode
+##### Production Mode
 
 To build and run the application in production mode:
 
@@ -92,7 +93,7 @@ docker-compose up app
 
 This will serve the optimised production build at [http://localhost:8080](http://localhost:8080).
 
-## Possible issues and their fixes
+#### Possible issues and their fixes
 
 If you encounter any issues:
 
